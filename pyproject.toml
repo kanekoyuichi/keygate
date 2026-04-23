@@ -39,6 +39,8 @@ keygate = "keygate.cli:main"
 dev = [
     "pytest>=7.4",
     "pytest-cov>=4.1",
+    "ruff>=0.4",
+    "mypy>=1.10",
 ]
 
 [tool.setuptools.packages.find]
