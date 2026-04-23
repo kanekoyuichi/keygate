@@ -130,7 +130,24 @@ patterns = ["dummy", "example"]         # この単語を含む行は無視
 keygate baseline create
 ```
 
-現時点の検知結果が `.keygate.baseline.json` というファイルに保存され、それ以降は同じ場所を検知しても無視されます。
+現時点の検知結果が `.keygate.baseline.json` というファイルに保存され、それ以降は同じ場所を検知しても無視されます。中身はこのような JSON です：
+
+```json
+{
+  "version": 1,
+  "entries": [
+    {
+      "fingerprint": "e5282a7860678bc768d280eb3e77d2ca8a44286357c743dd024d74fe0605fe09",
+      "file_path": "src/app/config.py",
+      "line_number": 42,
+      "rule_id": "url-credentials",
+      "created_at": "2026-04-22T09:30:00+00:00"
+    }
+  ]
+}
+```
+
+`fingerprint` は `file_path` + `line_number` + 検知文字列 の SHA256 ハッシュです。値そのものは保存されないため、baseline を Git にコミットしても機密情報は漏れません。
 
 新しく見逃しリストに追加したいものが出てきたら、こうします：
 
