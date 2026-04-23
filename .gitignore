@@ -18,10 +18,6 @@ env/
 *.swp
 .DS_Store
 
-.claude/*
-!.claude/memory/
-!.claude/memory/**
-!.claude/skills/
-!.claude/skills/**
+.claude/
 
 .keygate.baseline.json
