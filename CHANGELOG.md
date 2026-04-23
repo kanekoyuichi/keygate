@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.4] - 2026-04-24
+
+### Improvements
+
+- Update package metadata to use SPDX-style `license = "MIT"`
+- Remove the deprecated license classifier from `pyproject.toml`
+- Eliminate setuptools license deprecation warnings during package builds
+
 ## [0.1.3] - 2026-04-24
 
 ### Features
