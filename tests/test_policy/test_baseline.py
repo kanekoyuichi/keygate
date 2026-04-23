@@ -1,7 +1,4 @@
 import json
-from pathlib import Path
-
-import pytest
 
 from keygate.models import DiffLine, RuleMatch
 from keygate.policy.baseline import BaselineStore, _fingerprint

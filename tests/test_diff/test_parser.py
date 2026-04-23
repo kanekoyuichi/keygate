@@ -48,7 +48,7 @@ def test_parse_added_lines():
 
 def test_parse_file_path():
     lines = parse_diff(SAMPLE_DIFF)
-    assert all(l.file_path == "config.py" for l in lines)
+    assert all(line.file_path == "config.py" for line in lines)
 
 
 def test_parse_line_numbers():

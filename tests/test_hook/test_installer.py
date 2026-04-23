@@ -1,9 +1,7 @@
 import subprocess
-from pathlib import Path
 
 import click
 import pytest
-from click.testing import CliRunner
 
 from keygate.hook.installer import install
 

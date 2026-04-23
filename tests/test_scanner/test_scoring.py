@@ -1,4 +1,3 @@
-import pytest
 from keygate.models import DiffLine, RuleMatch, Verdict
 from keygate.scanner.context import ContextSignals
 from keygate.scanner.scoring import aggregate
