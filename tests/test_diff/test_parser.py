@@ -1,4 +1,4 @@
-from secretgate.diff.parser import parse_diff
+from keygate.diff.parser import parse_diff
 
 SAMPLE_DIFF = """\
 diff --git a/config.py b/config.py

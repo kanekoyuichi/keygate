@@ -1,4 +1,4 @@
-from secretgate.scanner.entropy import calculate_shannon_entropy, scan_line
+from keygate.scanner.entropy import calculate_shannon_entropy, scan_line
 
 
 def test_high_entropy_string():

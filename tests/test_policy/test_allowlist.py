@@ -1,5 +1,5 @@
-from secretgate.models import DiffLine
-from secretgate.policy.allowlist import check
+from keygate.models import DiffLine
+from keygate.policy.allowlist import check
 
 
 def make_line(content="secret", file_path="app.py"):

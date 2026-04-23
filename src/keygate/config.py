@@ -14,17 +14,17 @@ class Config:
     warn_score: int = 40
     allowlist_paths: list[str] = field(default_factory=list)
     allowlist_patterns: list[str] = field(default_factory=list)
-    baseline_path: str = ".secretgate.baseline.json"
+    baseline_path: str = ".keygate.baseline.json"
 
 
 def load_config(repo_root: Path) -> Config:
-    config_path = repo_root / "secretgate.toml"
+    config_path = repo_root / "keygate.toml"
     if not config_path.exists():
         return Config()
     try:
         data = tomllib.loads(config_path.read_text())
     except tomllib.TOMLDecodeError as e:
-        raise click.ClickException(f"secretgate.toml: {e}") from e
+        raise click.ClickException(f"keygate.toml: {e}") from e
 
     scan = data.get("scan", {})
     allowlist = data.get("allowlist", {})
@@ -36,5 +36,5 @@ def load_config(repo_root: Path) -> Config:
         warn_score=scan.get("warn_score", 40),
         allowlist_paths=allowlist.get("paths", []),
         allowlist_patterns=allowlist.get("patterns", []),
-        baseline_path=baseline.get("path", ".secretgate.baseline.json"),
+        baseline_path=baseline.get("path", ".keygate.baseline.json"),
     )

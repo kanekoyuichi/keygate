@@ -3,8 +3,8 @@ from pathlib import Path
 
 import pytest
 
-from secretgate.models import DiffLine, RuleMatch
-from secretgate.policy.baseline import BaselineStore, _fingerprint
+from keygate.models import DiffLine, RuleMatch
+from keygate.policy.baseline import BaselineStore, _fingerprint
 
 
 def make_line(file_path="app.py", line_number=1, content="secret"):

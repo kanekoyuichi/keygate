@@ -4,10 +4,10 @@ import re
 
 import click
 
-from secretgate.models import DiffLine, PolicyResult
+from keygate.models import DiffLine, PolicyResult
 
-_IGNORE_WITH_REASON = re.compile(r"#\s*secretgate:\s*ignore\s+reason=\"(?P<reason>[^\"]+)\"")
-_IGNORE_WITHOUT_REASON = re.compile(r"#\s*secretgate:\s*ignore\b")
+_IGNORE_WITH_REASON = re.compile(r"#\s*keygate:\s*ignore\s+reason=\"(?P<reason>[^\"]+)\"")
+_IGNORE_WITHOUT_REASON = re.compile(r"#\s*keygate:\s*ignore\b")
 
 
 def check(diff_line: DiffLine) -> PolicyResult:
@@ -16,7 +16,7 @@ def check(diff_line: DiffLine) -> PolicyResult:
     if _IGNORE_WITHOUT_REASON.search(diff_line.content):
         raise click.ClickException(
             f"{diff_line.file_path}:{diff_line.line_number}: "
-            "'secretgate: ignore' requires a reason. "
-            'Use: # secretgate: ignore reason="your reason here"'
+            "'keygate: ignore' requires a reason. "
+            'Use: # keygate: ignore reason="your reason here"'
         )
     return PolicyResult(suppressed=False, reason=None)

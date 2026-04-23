@@ -7,8 +7,8 @@ import click
 
 _HOOK_SCRIPT = """\
 #!/bin/sh
-# Installed by secretgate
-secretgate scan
+# Installed by keygate
+keygate scan
 """
 
 

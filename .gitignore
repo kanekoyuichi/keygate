@@ -20,4 +20,4 @@ env/
 
 .claude/
 
-.secretgate.baseline.json
+.keygate.baseline.json

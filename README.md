@@ -1,4 +1,4 @@
-# secretgate
+# keygate
 
 **APIキーやパスワードを誤って Git にコミットしてしまう事故を防ぐツール**です。
 
@@ -10,7 +10,7 @@
 
 たとえ後で削除しても、過去のコミットからは取り出せるため、GitHub などに公開されるとすぐに悪用されます。AWS のキーが漏れて高額請求された事例も多くあります。
 
-`secretgate` は **コミット直前に自動でチェック** し、危険なものが含まれていれば止めてくれます。
+`keygate` は **コミット直前に自動でチェック** し、危険なものが含まれていれば止めてくれます。
 
 ---
 
@@ -31,22 +31,22 @@
 
 ### ステップ1: インストール
 
-`secretgate` は Python 製のコマンドラインツールです。`pipx` というツールでインストールするのが一番簡単です。
+`keygate` は Python 製のコマンドラインツールです。`pipx` というツールでインストールするのが一番簡単です。
 
 ```bash
-pipx install secretgate
+pipx install keygate
 ```
 
 > `pipx` がない場合は `pip install pipx` でインストールできます。
-> `pipx` を使うと、どのプロジェクトのフォルダからでも `secretgate` コマンドが使えるようになります。
+> `pipx` を使うと、どのプロジェクトのフォルダからでも `keygate` コマンドが使えるようになります。
 
 ### ステップ2: フックを有効化する
 
-「フック」とは、Git が特定のタイミングで自動的に実行してくれる仕組みのことです。`secretgate install-hook` を実行すると、`git commit` のたびに `secretgate` が自動で動くようになります。
+「フック」とは、Git が特定のタイミングで自動的に実行してくれる仕組みのことです。`keygate install-hook` を実行すると、`git commit` のたびに `keygate` が自動で動くようになります。
 
 ```bash
 cd path/to/your-project   # 自分のプロジェクトに移動
-secretgate install-hook
+keygate install-hook
 ```
 
 これで準備完了です。
@@ -73,7 +73,7 @@ Remediation:
   - Use environment variables or AWS IAM roles instead
 
 To ignore:
-  Add comment: # secretgate: ignore reason="..."
+  Add comment: # keygate: ignore reason="..."
 ```
 
 **読み方：**
@@ -91,7 +91,7 @@ To ignore:
 
 ```bash
 git add .
-secretgate scan
+keygate scan
 ```
 
 `git diff --cached`（ステージ済みの変更）に対してスキャンを実行します。
@@ -100,19 +100,19 @@ secretgate scan
 
 ## 誤検知が出たときの対処
 
-`secretgate` は安全に倒すため、まれに本物ではないものも検知します。そのときの対処法を3つ用意しています。
+`keygate` は安全に倒すため、まれに本物ではないものも検知します。そのときの対処法を3つ用意しています。
 
 ### 方法1: コメントで「これは無視していい」と伝える
 
 その行限定で無視できます。理由を書くのが必須です。
 
 ```python
-api_key = "dummy-key-for-testing"  # secretgate: ignore reason="テストデータ"
+api_key = "dummy-key-for-testing"  # keygate: ignore reason="テストデータ"
 ```
 
 ### 方法2: ファイルやキーワードを丸ごと除外する
 
-プロジェクトのルートに `secretgate.toml` というファイルを作って、除外したいファイルパスやキーワードを書きます。
+プロジェクトのルートに `keygate.toml` というファイルを作って、除外したいファイルパスやキーワードを書きます。
 
 ```toml
 [allowlist]
@@ -127,33 +127,33 @@ patterns = ["dummy", "example"]         # この単語を含む行は無視
 これから新しく加わるものだけチェックしたい場合に便利です。
 
 ```bash
-secretgate baseline create
+keygate baseline create
 ```
 
-現時点の検知結果が `.secretgate.baseline.json` というファイルに保存され、それ以降は同じ場所を検知しても無視されます。
+現時点の検知結果が `.keygate.baseline.json` というファイルに保存され、それ以降は同じ場所を検知しても無視されます。
 
 新しく見逃しリストに追加したいものが出てきたら、こうします：
 
 ```bash
-secretgate baseline update
+keygate baseline update
 ```
 
 #### チームで共有する
 
-`.secretgate.baseline.json` は Git にコミットして共有することをおすすめします。共有しておけば、チーム全員が同じ「見逃してよい検知」リストを使えます。
+`.keygate.baseline.json` は Git にコミットして共有することをおすすめします。共有しておけば、チーム全員が同じ「見逃してよい検知」リストを使えます。
 
 ```bash
-git add .secretgate.baseline.json
-git commit -m "Add secretgate baseline"
+git add .keygate.baseline.json
+git commit -m "Add keygate baseline"
 ```
 
-新しくプロジェクトに参加した人は、`pipx install secretgate` と `secretgate install-hook` を実行するだけで、共有された baseline がそのまま使われます。
+新しくプロジェクトに参加した人は、`pipx install keygate` と `keygate install-hook` を実行するだけで、共有された baseline がそのまま使われます。
 
 ---
 
 ## 設定ファイル（必要な人だけ）
 
-デフォルト設定で十分動きますが、好みに合わせて変更できます。`secretgate.toml` をプロジェクトのルートに作ります。
+デフォルト設定で十分動きますが、好みに合わせて変更できます。`keygate.toml` をプロジェクトのルートに作ります。
 
 ```toml
 [scan]
@@ -165,7 +165,7 @@ paths = ["vendor/*"]
 patterns = ["dummy", "example"]
 
 [baseline]
-path = ".secretgate.baseline.json"
+path = ".keygate.baseline.json"
 ```
 
 設定ファイルがなければデフォルトで動作します。
@@ -180,8 +180,29 @@ A. すぐにそのキーを無効化（rotate）してください。Git の履�
 
 **Q. フックを一時的に無効化したい**
 
-A. `git commit --no-verify` で `secretgate` を含むすべてのフックをスキップできます（ただし非推奨です）。
+A. `git commit --no-verify` で `keygate` を含むすべてのフックをスキップできます（ただし非推奨です）。
 
 **Q. チームで共有するには？**
 
-A. `secretgate.toml` と `.secretgate.baseline.json` を Git にコミットして共有してください。各メンバーは `secretgate install-hook` をそれぞれ実行する必要があります。
+A. `keygate.toml` と `.keygate.baseline.json` を Git にコミットして共有してください。各メンバーは `keygate install-hook` をそれぞれ実行する必要があります。
+
+---
+
+## 免責事項
+
+`keygate` はベストエフォートで動作する検知ツールです。利用にあたっては以下を理解してください。
+
+- **完全な検知は保証しません**：未知のシークレット形式、難読化された値、独自フォーマットなどは検知できない場合があります（false negative）。
+- **誤検知が発生する可能性があります**：本物ではない文字列が検知されることがあります（false positive）。allowlist / baseline / inline ignore で対処してください。
+- **シークレット管理の代替ではありません**：本ツールはコミット時の追加防壁です。秘密情報は本来、環境変数・シークレットマネージャー・KMS 等で管理し、リポジトリに含めない設計を優先してください。
+- **フックの無効化を防ぐものではありません**：`git commit --no-verify` でバイパスされる可能性があります。組織的な統制が必要な場合はサーバ側のチェック（pre-receive hook、CI スキャン等）と併用してください。
+- **検知漏れによって機密情報が漏洩した場合の責任は利用者にあります**：本ツールの使用によって生じたいかなる損害についても、作者および貢献者は責任を負いません（詳細は [LICENSE](LICENSE) 記載のとおり）。
+- **検知された場合は速やかに鍵をローテーションしてください**：コミット前に止められた場合でも、ローカルファイル・エディタ履歴・クリップボード・他端末等に値が残っている可能性があります。
+
+本ツールは「シークレット管理を正しく行う」ことの代わりではなく、「人間のうっかりミスを最後に拾う網」として設計されています。
+
+---
+
+## ライセンス
+
+[MIT License](LICENSE) で配布しています。商用利用を含めて自由に利用・改変・再配布できます。詳細は [LICENSE](LICENSE) を参照してください。

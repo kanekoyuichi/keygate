@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import fnmatch
 
-from secretgate.models import DiffLine, PolicyResult
+from keygate.models import DiffLine, PolicyResult
 
 
 def check(diff_line: DiffLine, paths: list[str], patterns: list[str]) -> PolicyResult:

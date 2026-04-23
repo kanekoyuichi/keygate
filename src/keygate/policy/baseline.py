@@ -5,7 +5,7 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
-from secretgate.models import DiffLine, PolicyResult, RuleMatch, ScanResult
+from keygate.models import DiffLine, PolicyResult, RuleMatch, ScanResult
 
 _VERSION = 1
 

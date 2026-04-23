@@ -4,12 +4,12 @@ from pathlib import Path
 
 import click
 
-from secretgate.config import load_config
-from secretgate.diff.parser import get_staged_diff, parse_diff
-from secretgate.hook.installer import install
-from secretgate.models import ScanResult, Verdict
-from secretgate.policy import allowlist, baseline, inline
-from secretgate.scanner import context, entropy, rules, scoring
+from keygate.config import load_config
+from keygate.diff.parser import get_staged_diff, parse_diff
+from keygate.hook.installer import install
+from keygate.models import ScanResult, Verdict
+from keygate.policy import allowlist, baseline, inline
+from keygate.scanner import context, entropy, rules, scoring
 
 
 def _print_result(result: ScanResult, level: str) -> None:
@@ -24,7 +24,7 @@ def _print_result(result: ScanResult, level: str) -> None:
         click.echo("\nRemediation:")
         for item in result.rule_matches[0].remediation:
             click.echo(f"  - {item}")
-    click.echo('\nTo ignore:\n  Add comment: # secretgate: ignore reason="..."')
+    click.echo('\nTo ignore:\n  Add comment: # keygate: ignore reason="..."')
 
 
 def _run_scan(repo_root: Path) -> tuple[list[ScanResult], list[ScanResult]]:
@@ -52,9 +52,9 @@ def _run_scan(repo_root: Path) -> tuple[list[ScanResult], list[ScanResult]]:
 
         rule_matches = rules.scan_line(line.content)
         entropy_score = entropy.scan_line(line.content, cfg.entropy_threshold)
-        context_score = context.score_line(line.content, line.file_path)
+        context_signals = context.score_line(line.content, line.file_path)
         result = scoring.aggregate(
-            line, rule_matches, entropy_score, context_score,
+            line, rule_matches, entropy_score, context_signals,
             cfg.block_score, cfg.warn_score,
         )
 
@@ -76,7 +76,7 @@ def _run_scan(repo_root: Path) -> tuple[list[ScanResult], list[ScanResult]]:
 
 @click.group()
 def main() -> None:
-    """secretgate - Git pre-commit secret scanner."""
+    """keygate - Git pre-commit secret scanner."""
 
 
 @main.command()
@@ -97,7 +97,7 @@ def scan() -> None:
 
 @main.command("install-hook")
 def install_hook() -> None:
-    """Install secretgate as a pre-commit hook."""
+    """Install keygate as a pre-commit hook."""
     install(Path.cwd())
 
 

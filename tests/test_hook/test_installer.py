@@ -5,7 +5,7 @@ import click
 import pytest
 from click.testing import CliRunner
 
-from secretgate.hook.installer import install
+from keygate.hook.installer import install
 
 
 @pytest.fixture
@@ -18,7 +18,7 @@ def test_install_creates_hook(git_repo):
     install(git_repo)
     hook = git_repo / ".git" / "hooks" / "pre-commit"
     assert hook.exists()
-    assert "secretgate scan" in hook.read_text()
+    assert "keygate scan" in hook.read_text()
 
 
 def test_hook_is_executable(git_repo):

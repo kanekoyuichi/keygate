@@ -1,5 +1,5 @@
 import pytest
-from secretgate.models import DiffLine
+from keygate.models import DiffLine
 
 
 @pytest.fixture

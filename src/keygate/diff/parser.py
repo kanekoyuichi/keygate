@@ -5,7 +5,7 @@ import subprocess
 
 import click
 
-from secretgate.models import DiffLine
+from keygate.models import DiffLine
 
 _HUNK_HEADER = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@")
 
