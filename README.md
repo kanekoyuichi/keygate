@@ -4,62 +4,64 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 
-**APIキーやパスワードを誤って Git にコミットしてしまう事故を防ぐツール**です。
+A Git pre-commit hook that **prevents accidental commits of API keys and passwords**.
+
+[日本語版はこちら](https://github.com/yuichi-kaneko/keygate/blob/main/README.ja.md)
 
 ---
 
-## なぜ必要なのか
+## Why you need this
 
-開発中、コードに API キーやパスワードを直接書いてしまうことがあります。それをそのまま `git commit` すると、リポジトリの履歴に永久に残ってしまいます。
+During development, it's easy to write API keys or passwords directly in code. Once committed with `git commit`, they become permanently embedded in the repository history.
 
-たとえ後で削除しても、過去のコミットからは取り出せるため、GitHub などに公開されるとすぐに悪用されます。AWS のキーが漏れて高額請求された事例も多くあります。
+Even if you delete them later, they remain accessible from past commits — and once exposed on GitHub or similar platforms, they can be exploited almost immediately. There are countless cases of AWS key leaks resulting in massive unexpected bills.
 
-`keygate` は **コミット直前に自動でチェック** し、危険なものが含まれていれば止めてくれます。
-
----
-
-## 検知できるもの
-
-- AWS アクセスキー
-- OpenAI API キー
-- GitHub トークン
-- Slack トークン
-- 秘密鍵（PEM 形式）
-- JWT トークン
-- ランダムに見える長い文字列（高エントロピー検知）
-- `api_key`, `password`, `secret` などの変数名 + 値
+`keygate` **automatically checks before every commit** and blocks anything that looks dangerous.
 
 ---
 
-## はじめかた
+## What it detects
 
-### ステップ1: インストール
+- AWS Access Keys
+- OpenAI API Keys
+- GitHub Tokens
+- Slack Tokens
+- Private Keys (PEM format)
+- JWT Tokens
+- Long random-looking strings (high-entropy detection)
+- Variable names like `api_key`, `password`, `secret` paired with values
 
-`keygate` は Python 製のコマンドラインツールです。`pipx` というツールでインストールするのが一番簡単です。
+---
+
+## Getting started
+
+### Step 1: Install
+
+`keygate` is a Python CLI tool. The easiest way to install it is via `pipx`.
 
 ```bash
 pipx install keygate
 ```
 
-> `pipx` がない場合は `pip install pipx` でインストールできます。
-> `pipx` を使うと、どのプロジェクトのフォルダからでも `keygate` コマンドが使えるようになります。
+> If you don't have `pipx`, install it with `pip install pipx`.
+> Using `pipx` makes the `keygate` command available from any project directory.
 
-### ステップ2: フックを有効化する
+### Step 2: Enable the hook
 
-「フック」とは、Git が特定のタイミングで自動的に実行してくれる仕組みのことです。`keygate install-hook` を実行すると、`git commit` のたびに `keygate` が自動で動くようになります。
+A "hook" is a script Git runs automatically at certain points. Running `keygate install-hook` makes `keygate` run automatically on every `git commit`.
 
 ```bash
-cd path/to/your-project   # 自分のプロジェクトに移動
+cd path/to/your-project
 keygate install-hook
 ```
 
-これで準備完了です。
+That's all the setup you need.
 
-### ステップ3: 実際に使ってみる
+### Step 3: Use it
 
-普段通り `git add` と `git commit` をするだけです。危険なものが含まれていなければ、何も起きません。
+Just run `git add` and `git commit` as usual. If nothing dangerous is found, nothing happens.
 
-危険なものが含まれていると、こんなふうにコミットが止まります：
+If a secret is detected, the commit is blocked like this:
 
 ```
 [BLOCK] High confidence secret detected
@@ -80,61 +82,61 @@ To ignore:
   Add comment: # keygate: ignore reason="..."
 ```
 
-**読み方：**
-- `File: config.py:12` — 問題のあるファイルと行番号
-- `Rule: aws-access-key` — 何を検知したか
-- `Score: 100` — 危険度（70以上で自動ブロック、40〜69は警告のみ）
-- `Reason` — 検知の理由
-- `Remediation` — 直し方の提案
+**How to read the output:**
+- `File: config.py:12` — the file and line number where the issue was found
+- `Rule: aws-access-key` — what was detected
+- `Score: 100` — severity (70+ blocks the commit; 40–69 warns only)
+- `Reason` — why it was flagged
+- `Remediation` — suggested fixes
 
 ---
 
-## 手動でスキャンする
+## Manual scan
 
-フックを使わず、その場でチェックすることもできます。
+You can also scan without using the hook.
 
 ```bash
 git add .
 keygate scan
 ```
 
-`git diff --cached`（ステージ済みの変更）に対してスキャンを実行します。
+This scans `git diff --cached` (staged changes only).
 
 ---
 
-## 誤検知が出たときの対処
+## Handling false positives
 
-`keygate` は安全に倒すため、まれに本物ではないものも検知します。そのときの対処法を3つ用意しています。
+`keygate` errs on the side of caution, so it may occasionally flag things that aren't real secrets. There are three ways to deal with this.
 
-### 方法1: コメントで「これは無視していい」と伝える
+### Option 1: Inline ignore comment
 
-その行限定で無視できます。理由を書くのが必須です。
+Suppresses detection for that specific line. A reason is required.
 
 ```python
-api_key = "dummy-key-for-testing"  # keygate: ignore reason="テストデータ"
+api_key = "dummy-key-for-testing"  # keygate: ignore reason="test data"
 ```
 
-### 方法2: ファイルやキーワードを丸ごと除外する
+### Option 2: Allowlist paths or patterns
 
-プロジェクトのルートに `keygate.toml` というファイルを作って、除外したいファイルパスやキーワードを書きます。
+Create a `keygate.toml` file in your project root and specify paths or patterns to exclude.
 
 ```toml
 [allowlist]
-paths = ["vendor/*", "third_party/*"]  # 自分のコードではない箇所は無視
-patterns = ["dummy", "example"]         # この単語を含む行は無視
+paths = ["vendor/*", "third_party/*"]  # ignore code you don't own
+patterns = ["dummy", "example"]         # ignore lines containing these words
 ```
 
-> 注意: `tests/*` のようにテスト全体を allowlist に入れると、テストコードに混入した本物のシークレットを見逃します。テスト側の誤検知は方法1（inline ignore）か方法3（baseline）で対処してください。
+> Note: Adding `tests/*` to the allowlist globally will cause keygate to miss real secrets embedded in test code. Use option 1 (inline ignore) or option 3 (baseline) for false positives in tests.
 
-### 方法3: 既存の検知をすべて見逃しリストに登録する（baseline）
+### Option 3: Baseline — register existing findings to ignore
 
-これから新しく加わるものだけチェックしたい場合に便利です。
+Useful when you only want to catch newly added secrets, not existing ones.
 
 ```bash
 keygate baseline create
 ```
 
-現時点の検知結果が `.keygate.baseline.json` というファイルに保存され、それ以降は同じ場所を検知しても無視されます。中身はこのような JSON です：
+The current findings are saved to `.keygate.baseline.json`. From that point on, the same findings are ignored. The file looks like this:
 
 ```json
 {
@@ -151,35 +153,35 @@ keygate baseline create
 }
 ```
 
-`fingerprint` は `file_path` + `line_number` + 検知文字列 の SHA256 ハッシュです。値そのものは保存されないため、baseline を Git にコミットしても機密情報は漏れません。
+The `fingerprint` is a SHA256 hash of `file_path` + `line_number` + matched string. The actual secret value is never stored, so committing the baseline file to Git is safe.
 
-新しく見逃しリストに追加したいものが出てきたら、こうします：
+To add newly discovered findings to the baseline:
 
 ```bash
 keygate baseline update
 ```
 
-#### チームで共有する
+#### Sharing with your team
 
-`.keygate.baseline.json` は Git にコミットして共有することをおすすめします。共有しておけば、チーム全員が同じ「見逃してよい検知」リストを使えます。
+We recommend committing `.keygate.baseline.json` to Git so the whole team uses the same ignore list.
 
 ```bash
 git add .keygate.baseline.json
 git commit -m "Add keygate baseline"
 ```
 
-新しくプロジェクトに参加した人は、`pipx install keygate` と `keygate install-hook` を実行するだけで、共有された baseline がそのまま使われます。
+New team members only need to run `pipx install keygate` and `keygate install-hook` — the shared baseline is picked up automatically.
 
 ---
 
-## 設定ファイル（必要な人だけ）
+## Configuration (optional)
 
-デフォルト設定で十分動きますが、好みに合わせて変更できます。`keygate.toml` をプロジェクトのルートに作ります。
+The defaults work well out of the box, but you can customize behavior by creating `keygate.toml` in your project root.
 
 ```toml
 [scan]
-entropy_threshold = 4.2    # ランダムに見える文字列を検知する基準（厳しくしたいなら下げる）
-block_score = 70           # この点数以上でコミットを止める
+entropy_threshold = 4.2    # threshold for random-looking strings (lower = stricter)
+block_score = 70           # commits are blocked at this score or above
 
 [allowlist]
 paths = ["vendor/*"]
@@ -189,41 +191,41 @@ patterns = ["dummy", "example"]
 path = ".keygate.baseline.json"
 ```
 
-設定ファイルがなければデフォルトで動作します。
+If no config file is present, defaults are used.
 
 ---
 
-## よくある質問
+## FAQ
 
-**Q. うっかり機密情報をコミットしてしまったらどうすれば？**
+**Q. I accidentally committed a secret. What should I do?**
 
-A. すぐにそのキーを無効化（rotate）してください。Git の履歴から消すだけでは不十分です。漏れた可能性のあるキーは攻撃者の手に渡っていると考えるべきです。
+A. Revoke (rotate) the key immediately. Removing it from Git history is not enough. Assume any leaked key has already reached an attacker.
 
-**Q. フックを一時的に無効化したい**
+**Q. How do I temporarily disable the hook?**
 
-A. `git commit --no-verify` で `keygate` を含むすべてのフックをスキップできます（ただし非推奨です）。
+A. Use `git commit --no-verify` to skip all hooks including keygate. Not recommended for regular use.
 
-**Q. チームで共有するには？**
+**Q. How do we share this across a team?**
 
-A. `keygate.toml` と `.keygate.baseline.json` を Git にコミットして共有してください。各メンバーは `keygate install-hook` をそれぞれ実行する必要があります。
-
----
-
-## 免責事項
-
-`keygate` はベストエフォートで動作する検知ツールです。利用にあたっては以下を理解してください。
-
-- **完全な検知は保証しません**：未知のシークレット形式、難読化された値、独自フォーマットなどは検知できない場合があります（false negative）。
-- **誤検知が発生する可能性があります**：本物ではない文字列が検知されることがあります（false positive）。allowlist / baseline / inline ignore で対処してください。
-- **シークレット管理の代替ではありません**：本ツールはコミット時の追加防壁です。秘密情報は本来、環境変数・シークレットマネージャー・KMS 等で管理し、リポジトリに含めない設計を優先してください。
-- **フックの無効化を防ぐものではありません**：`git commit --no-verify` でバイパスされる可能性があります。組織的な統制が必要な場合はサーバ側のチェック（pre-receive hook、CI スキャン等）と併用してください。
-- **検知漏れによって機密情報が漏洩した場合の責任は利用者にあります**：本ツールの使用によって生じたいかなる損害についても、作者および貢献者は責任を負いません（詳細は [LICENSE](LICENSE) 記載のとおり）。
-- **検知された場合は速やかに鍵をローテーションしてください**：コミット前に止められた場合でも、ローカルファイル・エディタ履歴・クリップボード・他端末等に値が残っている可能性があります。
-
-本ツールは「シークレット管理を正しく行う」ことの代わりではなく、「人間のうっかりミスを最後に拾う網」として設計されています。
+A. Commit `keygate.toml` and `.keygate.baseline.json` to Git. Each team member needs to run `keygate install-hook` individually.
 
 ---
 
-## ライセンス
+## Disclaimer
 
-[MIT License](LICENSE) で配布しています。商用利用を含めて自由に利用・改変・再配布できます。詳細は [LICENSE](LICENSE) を参照してください。
+`keygate` is a best-effort detection tool. Please understand the following before use.
+
+- **Detection is not guaranteed**: Unknown secret formats, obfuscated values, or custom formats may not be detected (false negatives).
+- **False positives can occur**: Non-secret strings may be flagged. Use allowlist / baseline / inline ignore to address them.
+- **Not a replacement for proper secret management**: This tool is an additional safeguard at commit time. Secrets should be managed via environment variables, secret managers, or KMS — never stored in the repository.
+- **Hooks can be bypassed**: `git commit --no-verify` skips all hooks. For organizational enforcement, combine with server-side checks (pre-receive hooks, CI scanning, etc.).
+- **You are responsible for any leaks caused by missed detections**: The authors and contributors accept no liability for damages arising from use of this tool (see [LICENSE](LICENSE) for details).
+- **If a secret is detected, rotate the key promptly**: Even if the commit was blocked, the value may remain in local files, editor history, clipboard, or other devices.
+
+This tool is designed as a last-resort safety net to catch human mistakes — not as a substitute for doing secret management correctly.
+
+---
+
+## License
+
+Distributed under the [MIT License](LICENSE). Free to use, modify, and redistribute, including for commercial use. See [LICENSE](LICENSE) for details.
