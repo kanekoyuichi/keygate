@@ -6,34 +6,37 @@ import click
 
 from keygate.config import load_config
 from keygate.diff.parser import get_staged_diff, parse_diff
+from keygate.formatters import json as json_formatter
+from keygate.formatters import text as text_formatter
 from keygate.hook.installer import install
-from keygate.models import ScanResult, Verdict
+from keygate.models import ScanReport, ScanResult, ScanSummary, Status, Verdict
 from keygate.policy import allowlist, baseline, inline
 from keygate.scanner import context, entropy, rules, scoring
 
 
-def _print_result(result: ScanResult, level: str) -> None:
-    headline = "High confidence secret detected" if level == "BLOCK" else "Potential secret detected"
-    click.echo(f"\n[{level}] {headline}")
-    click.echo(f"\nFile: {result.diff_line.file_path}:{result.diff_line.line_number}")
-    if result.rule_matches:
-        click.echo(f"Rule: {result.rule_matches[0].rule_id}")
-    click.echo(f"Score: {result.total_score}")
-    click.echo(f"\nReason:\n{result.reason}")
-    if result.rule_matches and result.rule_matches[0].remediation:
-        click.echo("\nRemediation:")
-        for item in result.rule_matches[0].remediation:
-            click.echo(f"  - {item}")
-    click.echo('\nTo ignore:\n  Add comment: # keygate: ignore reason="..."')
+def _build_report(blocked: list[ScanResult], warned: list[ScanResult], scanned_lines: int) -> ScanReport:
+    if blocked:
+        status: Status = "block"
+    elif warned:
+        status = "warn"
+    else:
+        status = "pass"
+    summary = ScanSummary(
+        findings=len(blocked) + len(warned),
+        blocked=len(blocked),
+        warned=len(warned),
+        scanned_lines=scanned_lines,
+    )
+    return ScanReport(status=status, summary=summary, blocked=blocked, warned=warned)
 
 
-def _run_scan(repo_root: Path) -> tuple[list[ScanResult], list[ScanResult]]:
+def _run_scan(repo_root: Path) -> ScanReport:
     cfg = load_config(repo_root)
     diff_output = get_staged_diff()
     diff_lines = parse_diff(diff_output)
 
     if not diff_lines:
-        return [], []
+        return _build_report([], [], 0)
 
     store = baseline.BaselineStore(repo_root / cfg.baseline_path)
     store.load()
@@ -71,7 +74,29 @@ def _run_scan(repo_root: Path) -> tuple[list[ScanResult], list[ScanResult]]:
         else:
             warned.append(result)
 
-    return blocked, warned
+    return _build_report(blocked, warned, len(diff_lines))
+
+
+def _resolve_format(format_opt: str | None, json_flag: bool, profile: str | None) -> str:
+    """Resolve effective output format. Returns 'text' or 'json'.
+
+    Raises click.UsageError on conflict (results in exit code 2).
+    """
+    requested: set[str] = set()
+    if format_opt is not None:
+        requested.add(format_opt)
+    if json_flag:
+        requested.add("json")
+    if profile == "agent":
+        requested.add("json")
+
+    if len(requested) > 1:
+        raise click.UsageError(
+            "Conflicting output options: --format, --json, and --profile must agree."
+        )
+    if requested:
+        return next(iter(requested))
+    return "text"
 
 
 @click.group()
@@ -80,18 +105,39 @@ def main() -> None:
 
 
 @main.command()
-def scan() -> None:
+@click.option(
+    "--format",
+    "format_opt",
+    type=click.Choice(["text", "json"]),
+    default=None,
+    help="Output format (default: text).",
+)
+@click.option(
+    "--json",
+    "json_flag",
+    is_flag=True,
+    default=False,
+    help="Alias for --format json.",
+)
+@click.option(
+    "--profile",
+    type=click.Choice(["agent"]),
+    default=None,
+    help="Output profile. 'agent' forces JSON output for AI agents.",
+)
+def scan(format_opt: str | None, json_flag: bool, profile: str | None) -> None:
     """Scan staged diff for secrets."""
+    output_format = _resolve_format(format_opt, json_flag, profile)
+
     repo_root = Path.cwd()
-    blocked, warned = _run_scan(repo_root)
+    report = _run_scan(repo_root)
 
-    for result in warned:
-        _print_result(result, "WARN")
+    if output_format == "json":
+        click.echo(json_formatter.format(report))
+    else:
+        click.echo(text_formatter.format(report))
 
-    for result in blocked:
-        _print_result(result, "BLOCK")
-
-    if blocked:
+    if report.status == "block":
         raise SystemExit(1)
 
 
@@ -113,8 +159,8 @@ def baseline_create() -> None:
     cfg = load_config(repo_root)
     store = baseline.BaselineStore(repo_root / cfg.baseline_path)
 
-    blocked, warned = _run_scan(repo_root)
-    all_results = blocked + warned
+    report = _run_scan(repo_root)
+    all_results = report.blocked + report.warned
     store.add_from_results(all_results)
     store.save()
     click.echo(f"Baseline created: {len(all_results)} finding(s) recorded.")
@@ -128,8 +174,12 @@ def baseline_update() -> None:
     store = baseline.BaselineStore(repo_root / cfg.baseline_path)
     store.load()
 
-    blocked, warned = _run_scan(repo_root)
-    all_results = blocked + warned
+    report = _run_scan(repo_root)
+    all_results = report.blocked + report.warned
     store.add_from_results(all_results)
     store.save()
     click.echo(f"Baseline updated: {len(all_results)} new finding(s) added.")
+
+
+if __name__ == "__main__":
+    main()

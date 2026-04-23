@@ -2,11 +2,8 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from typing import Literal
 
-from keygate.models import RuleMatch
-
-Policy = Literal["must_block", "public_exposable"]
+from keygate.models import Policy, RuleMatch
 
 
 @dataclass
@@ -21,7 +18,7 @@ class Rule:
 
 _URL_CREDENTIALS_PATTERN = re.compile(
     r"(?P<scheme>[A-Za-z][A-Za-z0-9+.-]*)://"
-    r"(?P<user>[^:@/\s]+):"
+    r"(?P<user>[^:@/\s]*):"
     r"(?P<pwd>[^@\s]+)@"
 )
 
@@ -166,6 +163,7 @@ def _match_url_credentials(rule: Rule, m: re.Match[str]) -> RuleMatch:
                 "If this is a real credential, remove it and rotate",
                 "If this is documentation, consider using a placeholder like <password>",
             ],
+            policy=rule.policy,
         )
     return RuleMatch(
         rule_id=rule.rule_id,
@@ -173,6 +171,7 @@ def _match_url_credentials(rule: Rule, m: re.Match[str]) -> RuleMatch:
         score=rule.score,
         description=rule.description,
         remediation=rule.remediation,
+        policy=rule.policy,
     )
 
 
@@ -191,5 +190,6 @@ def scan_line(content: str) -> list[RuleMatch]:
                 score=rule.score,
                 description=rule.description,
                 remediation=rule.remediation,
+                policy=rule.policy,
             ))
     return matches

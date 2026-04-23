@@ -100,6 +100,26 @@ keygate scan
 
 扫描对象为 `git diff --cached`（仅限已暂存的变更）。
 
+### 面向 AI 智能体与自动化的 JSON 输出
+
+`keygate scan` 默认输出为人类可读的 text。如果是 AI 智能体或脚本需要解析结果，可使用 JSON 输出：
+
+```bash
+keygate scan --format json    # stdout 仅输出 JSON
+keygate scan --json           # --format json 的别名
+keygate scan --profile agent  # 固定 JSON，不输出人类提示文本
+```
+
+默认 text 输出在首行也包含可被机器解析的摘要：
+
+```
+[KEYGATE] status=block findings=1
+```
+
+被 BLOCK 时，text 输出会附带 JSON 重新运行的命令提示，便于智能体改用 JSON 重新解析。JSON 负载遵循固定 schema（`schema_version: "1"`），包含 `status` / `summary` / `findings[]`（含 `rule_id`、`policy`、`score`、`verdict`、`file`、`line`、`message`，可生成时附 `snippet` 掩码）。
+
+exit code 与原行为一致：`0` 表示 pass/warn，`1` 表示 block，`2` 表示选项冲突（如同时指定 `--format text` 与 `--json`）。
+
 ---
 
 ## 处理误报
@@ -206,6 +226,32 @@ A. 使用 `git commit --no-verify` 可跳过包括 keygate 在内的所有钩子
 **Q. 如何在团队中共享配置？**
 
 A. 将 `keygate.toml` 和 `.keygate.baseline.json` 提交到 Git 共享。每位成员需单独执行 `keygate install-hook`。
+
+---
+
+## 检测准确率
+
+基于 100 个标注样本（50 个已知密钥、50 个无害字符串）的测量结果。
+
+| 指标 | 值 |
+|------|-----|
+| 召回率（Recall: 未漏掉真实密钥的比例） | 100.0% |
+| 精确率（Precision: 被检测项中真正危险的比例） | 80.6% |
+| F1 分数（召回率与精确率的平衡指标） | 89.3% |
+| True Positive（正确检测到的密钥） | 50 |
+| False Negative（漏掉的密钥） | 0 |
+| False Positive（并非真实密钥但被检测到的内容） | 12 |
+| True Negative（正确放行的无害字符串） | 38 |
+
+**召回率 100.0%** 意味着语料库中所有已知密钥均被检测到（BLOCK 或 WARN）。也就是说，在该基准测试中没有漏检密钥。
+
+**精确率 80.6%** 反映了 12 个 False Positive。其中包括已遮蔽的 URL 凭据、占位符、Stripe publishable key，以及 `API_KEY=` 这样的空值。它们并不一定是真实密钥，但外观接近密钥，因此 `keygate` 会在提交前提示你检查。
+
+语料库和阈值作为回归测试进行管理。如需重新测量：
+
+```bash
+python -m tests.benchmark.benchmark
+```
 
 ---
 

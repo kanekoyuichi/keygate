@@ -6,6 +6,8 @@ build/
 dist/
 
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
 .coverage
 htmlcov/
 
@@ -18,6 +20,15 @@ env/
 *.swp
 .DS_Store
 
-.claude/
+# Internal design notes (not user-facing)
+docs/
 
+.claude/
+.codex/
+CLAUDE.md
+AGENTS.md
+
+# EN: Commit this file instead if you want to share a baseline with the team.
+# JA: ベースラインをチームで共有する場合は、このファイルをignoreせずにコミットしてください。
+# ZH: 如果要与团队共享 baseline，请不要忽略此文件，而是将其提交到 Git。
 .keygate.baseline.json

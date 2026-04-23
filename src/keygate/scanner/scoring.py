@@ -7,6 +7,25 @@ from keygate.scanner.context import ContextSignals
 
 _TEST_FILE = re.compile(r"(?:^|/)test[s]?/|_test\.py$|test_.*\.py$", re.IGNORECASE)
 _DUMMY_PATTERN = re.compile(r"\b(?:dummy|example)\b", re.IGNORECASE)
+_PLACEHOLDER_PATH = re.compile(
+    r"(?:^|/)(?:README(?:\.[^.]+)?|docs/|tests/fixtures/|[^/]*\.env\.example$|[^/]*\.example\.[^/]+$)",
+    re.IGNORECASE,
+)
+_PLACEHOLDER_VALUE = re.compile(
+    r"(?:"
+    r"\b(?:dummy|example|changeme|replace[_-]?me|placeholder|redacted)\b"
+    r"|<[^>]+>"
+    r'|=\s*(?:""|\'\'|None)\s*(?:#.*)?$'
+    r"|:\s*(?:\"\"|''|None)\s*(?:#.*)?$"
+    r"|=\s*(?:#.*)?$"
+    r")",
+    re.IGNORECASE,
+)
+_COMMENT_SAMPLE_CONTEXT = re.compile(
+    r"^\s*#|"
+    r"\b(?:example only|sample|placeholder|documentation)\b",
+    re.IGNORECASE,
+)
 
 
 def _is_test_file(file_path: str) -> bool:
@@ -15,6 +34,18 @@ def _is_test_file(file_path: str) -> bool:
 
 def _contains_dummy_pattern(content: str) -> bool:
     return bool(_DUMMY_PATTERN.search(content))
+
+
+def _has_placeholder_path(file_path: str) -> bool:
+    return bool(_PLACEHOLDER_PATH.search(file_path))
+
+
+def _has_placeholder_value(content: str) -> bool:
+    return bool(_PLACEHOLDER_VALUE.search(content))
+
+
+def _has_comment_sample_context(content: str) -> bool:
+    return bool(_COMMENT_SAMPLE_CONTEXT.search(content))
 
 
 def _build_reason(
@@ -42,11 +73,10 @@ def aggregate(
 ) -> ScanResult:
     breakdown: dict[str, int] = {}
 
-    rule_score = 0
-    if rule_matches:
-        top = max(rule_matches, key=lambda m: m.score)
-        rule_score = top.score
-        breakdown[f"rule:{top.rule_id}"] = rule_score
+    top_match = max(rule_matches, key=lambda m: m.score) if rule_matches else None
+    rule_score = top_match.score if top_match else 0
+    if top_match is not None:
+        breakdown[f"rule:{top_match.rule_id}"] = rule_score
 
     if entropy_score > 0:
         breakdown["entropy"] = entropy_score
@@ -87,6 +117,20 @@ def aggregate(
         verdict = Verdict.WARN
     else:
         verdict = Verdict.IGNORE
+
+    if (
+        verdict == Verdict.BLOCK
+        and top_match is not None
+        and top_match.policy == "must_block"
+        and _has_placeholder_value(diff_line.content)
+        and (
+            _has_placeholder_path(diff_line.file_path)
+            or _has_comment_sample_context(diff_line.content)
+        )
+    ):
+        breakdown["cap:placeholder_context"] = warn_score
+        total = min(total, warn_score)
+        verdict = Verdict.WARN
 
     return ScanResult(
         diff_line=diff_line,

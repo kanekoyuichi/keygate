@@ -14,6 +14,7 @@ def make_rule_match(score=90):
         score=score,
         description="AWS Access Key detected",
         remediation=["Rotate credentials"],
+        policy="must_block",
     )
 
 
@@ -59,6 +60,52 @@ def test_dummy_penalty():
     line = make_line(content="dummy key AKIAIOSFODNN7EXAMPLE")
     result = aggregate(line, [make_rule_match(75)], 0, ctx())
     assert result.total_score == 55
+
+
+def test_placeholder_path_caps_strong_rule_to_warn():
+    line = make_line(
+        content='AWS_KEY = "AKIAIOSFODNN7EXAMPLE1234"  # example only',  # keygate: ignore reason="test fixture"
+        file_path="README.md",
+    )
+    signals = ctx(assignment_score=15)
+    result = aggregate(line, [make_rule_match(90)], 0, signals)
+    assert result.verdict == Verdict.WARN
+    assert result.total_score == 40
+    assert result.score_breakdown["cap:placeholder_context"] == 40
+
+
+def test_placeholder_comment_caps_openai_rule_to_warn():
+    line = make_line(
+        content='api_key = "sk-abcdefghijklmnopqrstuvwxyz123456"  # dummy sample',  # keygate: ignore reason="test fixture"
+        file_path="app.py",
+    )
+    match = RuleMatch(
+        rule_id="openai-api-key",
+        matched_text="sk-abcdefghijklmnopqrstuvwxyz123456",  # keygate: ignore reason="test fixture"
+        score=85,
+        description="OpenAI API Key detected",
+        policy="must_block",
+    )
+    signals = ctx(keyword_score=25, keyword_tier="high", assignment_score=15)
+    result = aggregate(line, [match], 20, signals)
+    assert result.verdict == Verdict.WARN
+    assert result.total_score == 40
+    assert result.score_breakdown["cap:placeholder_context"] == 40
+
+
+def test_dummy_word_alone_does_not_cap_real_secret():
+    line = make_line(content='api_key = "sk-abcdefghijklmnopqrstuvwxyz123456" dummy')  # keygate: ignore reason="test fixture"
+    match = RuleMatch(
+        rule_id="openai-api-key",
+        matched_text="sk-abcdefghijklmnopqrstuvwxyz123456",  # keygate: ignore reason="test fixture"
+        score=85,
+        description="OpenAI API Key detected",
+        policy="must_block",
+    )
+    signals = ctx(keyword_score=25, keyword_tier="high", assignment_score=15)
+    result = aggregate(line, [match], 20, signals)
+    assert result.verdict == Verdict.BLOCK
+    assert "cap:placeholder_context" not in result.score_breakdown
 
 
 def test_score_never_negative():

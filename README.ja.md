@@ -100,6 +100,26 @@ keygate scan
 
 `git diff --cached`（ステージ済みの変更）に対してスキャンを実行します。
 
+### AI エージェント・自動化向けの JSON 出力
+
+`keygate scan` のデフォルト出力は人間向けの text ですが、AI エージェントやスクリプトで結果を解析したい場合は JSON を使えます。
+
+```bash
+keygate scan --format json    # stdout に JSON のみを出力
+keygate scan --json           # --format json のエイリアス
+keygate scan --profile agent  # JSON 固定。人間向け説明は出さない
+```
+
+デフォルトの text 出力にも、機械的に読めるサマリ行が先頭に出ます。
+
+```
+[KEYGATE] status=block findings=1
+```
+
+BLOCK 時の text 出力には JSON 再実行用のコマンドも案内されるため、エージェントは text を見て JSON で再実行できます。JSON ペイロードは固定スキーマ（`schema_version: "1"`）で、`status` / `summary` / `findings[]`（`rule_id` / `policy` / `score` / `verdict` / `file` / `line` / `message`、マスク済み `snippet`（生成可能な場合のみ）を含む）を返します。
+
+exit code は従来通りで、`0` が pass/warn、`1` が block、`2` がオプション誤指定（例：`--format text` と `--json` を併用）になります。
+
 ---
 
 ## 誤検知が出たときの対処
@@ -206,6 +226,32 @@ A. `git commit --no-verify` で `keygate` を含むすべてのフックをス�
 **Q. チームで共有するには？**
 
 A. `keygate.toml` と `.keygate.baseline.json` を Git にコミットして共有してください。各メンバーは `keygate install-hook` をそれぞれ実行する必要があります。
+
+---
+
+## 検知精度
+
+100件のラベル付きコーパス（既知シークレット50件、無害な文字列50件）で計測した結果です。
+
+| 指標 | 値 |
+|------|-----|
+| 再現率（Recall: 本物のシークレットを見逃さず検知できた割合） | 100.0% |
+| 適合率（Precision: 検知したもののうち本当に危険だった割合） | 80.6% |
+| F1 スコア（再現率と適合率のバランス指標） | 89.3% |
+| True Positive（正しく検知できたシークレット） | 50 |
+| False Negative（見逃したシークレット） | 0 |
+| False Positive（本物のシークレットではないが検知したもの） | 12 |
+| True Negative（正しく通過させた無害な文字列） | 38 |
+
+**再現率 100.0%** は、コーパス内のすべての既知シークレットを検知（BLOCK または WARN）できたことを意味します。つまり、このベンチマークではシークレットの見逃しは 0 件でした。
+
+**適合率 80.6%** は12件の False Positive を反映しています。内訳には、マスク済み URL credentials、プレースホルダー、Stripe publishable key、`API_KEY=` のような空値などが含まれます。これらは本物のシークレットではない場合もありますが、見た目がシークレットに近いため、コミット前に確認できるよう検知対象にしています。
+
+コーパスと閾値はリグレッションテストとして管理されています。再計測するには：
+
+```bash
+python -m tests.benchmark.benchmark
+```
 
 ---
 

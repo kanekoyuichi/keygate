@@ -102,6 +102,26 @@ keygate scan
 
 This scans `git diff --cached` (staged changes only).
 
+### JSON output for AI agents and automation
+
+By default, `keygate scan` prints human-readable text. For AI agents or scripts that need to parse the result, use JSON output:
+
+```bash
+keygate scan --format json    # JSON only on stdout
+keygate scan --json           # alias for --format json
+keygate scan --profile agent  # forces JSON, no human prose
+```
+
+Default text output starts with a machine-readable summary line so simple tools can also pick up the status:
+
+```
+[KEYGATE] status=block findings=1
+```
+
+When a commit is blocked, the text output also points to the JSON command so an agent can re-run and parse the result. The JSON payload follows a fixed schema (`schema_version: "1"`) with `status`, `summary`, and `findings[]` (including `rule_id`, `policy`, `score`, `verdict`, `file`, `line`, `message`, and a masked `snippet` when available).
+
+Exit codes are unchanged: `0` for pass/warn, `1` for block, `2` for usage errors (such as combining `--format text` with `--json`).
+
 ---
 
 ## Handling false positives
@@ -208,6 +228,32 @@ A. Use `git commit --no-verify` to skip all hooks including keygate. Not recomme
 **Q. How do we share this across a team?**
 
 A. Commit `keygate.toml` and `.keygate.baseline.json` to Git. Each team member needs to run `keygate install-hook` individually.
+
+---
+
+## Detection accuracy
+
+Measured against a labeled corpus of 100 samples (50 known secrets, 50 benign strings).
+
+| Metric    | Value |
+|-----------|-------|
+| Recall    | 100.0% |
+| Precision | 80.6%  |
+| F1        | 89.3%  |
+| True Positive | 50 |
+| False Negative | 0 |
+| False Positive | 12 |
+| True Negative | 38 |
+
+**Recall 100.0%** means every known secret in the corpus was detected (BLOCK or WARN). In other words, the benchmark had zero missed secrets.
+
+**Precision 80.6%** reflects 12 false positives. These include masked URL credentials, placeholders, Stripe publishable keys, and empty values such as `API_KEY=`. They are not always real secrets, but they look close enough to secret-like values that `keygate` reports them before commit so you can review them.
+
+The corpus and thresholds are enforced as a regression test. To re-run:
+
+```bash
+python -m tests.benchmark.benchmark
+```
 
 ---
 
