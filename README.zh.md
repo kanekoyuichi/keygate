@@ -1,0 +1,229 @@
+# keygate
+
+[![PyPI version](https://img.shields.io/pypi/v/keygate.svg)](https://pypi.org/project/keygate/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+
+一个 Git pre-commit 钩子，**防止 API 密钥和密码被意外提交**。
+
+---
+
+## 为什么需要它
+
+开发过程中，很容易将 API 密钥或密码直接写入代码。一旦通过 `git commit` 提交，它们就会永久嵌入仓库历史记录中。
+
+即使事后删除，过去的提交中仍然可以访问到这些信息——一旦在 GitHub 等平台上公开，几乎会立即被滥用。因 AWS 密钥泄露而产生巨额账单的案例不胜枚举。
+
+`keygate` 在**每次提交前自动检查**，发现危险内容时阻止提交。
+
+---
+
+## 检测范围
+
+- AWS 访问密钥
+- OpenAI API 密钥
+- GitHub Token
+- Slack Token
+- 私钥（PEM 格式）
+- JWT Token
+- 看起来随机的长字符串（高熵检测）
+- 变量名如 `api_key`、`password`、`secret` 与其对应值的组合
+
+---
+
+## 快速开始
+
+### 第一步：安装
+
+`keygate` 是一个 Python CLI 工具，推荐使用 `pipx` 安装。
+
+```bash
+pipx install keygate
+```
+
+> 如果没有 `pipx`，可以通过 `pip install pipx` 安装。
+> 使用 `pipx` 安装后，`keygate` 命令可在任意项目目录中使用。
+
+### 第二步：启用钩子
+
+"钩子"是 Git 在特定时机自动执行的脚本。运行 `keygate install-hook` 后，每次 `git commit` 时 `keygate` 都会自动运行。
+
+```bash
+cd path/to/your-project
+keygate install-hook
+```
+
+配置完成。
+
+### 第三步：使用
+
+像往常一样执行 `git add` 和 `git commit`。如果没有发现危险内容，不会有任何提示。
+
+如果检测到密钥，提交会被阻止，输出如下：
+
+```
+[BLOCK] High confidence secret detected
+
+File: config.py:12
+Rule: aws-access-key
+Score: 100
+
+Reason:
+AWS Access Key detected; sensitive context detected
+
+Remediation:
+  - Remove the key from the code
+  - Rotate the AWS credentials immediately
+  - Use environment variables or AWS IAM roles instead
+
+To ignore:
+  Add comment: # keygate: ignore reason="..."
+```
+
+**输出说明：**
+- `File: config.py:12` — 问题所在的文件和行号
+- `Rule: aws-access-key` — 检测到的内容类型
+- `Score: 100` — 危险程度（70 分及以上阻止提交；40~69 分仅发出警告）
+- `Reason` — 触发检测的原因
+- `Remediation` — 修复建议
+
+---
+
+## 手动扫描
+
+也可以不使用钩子，直接在当前目录执行扫描。
+
+```bash
+git add .
+keygate scan
+```
+
+扫描对象为 `git diff --cached`（仅限已暂存的变更）。
+
+---
+
+## 处理误报
+
+`keygate` 倾向于保守检测，偶尔会误报非真实密钥。以下提供三种处理方式。
+
+### 方式一：内联忽略注释
+
+仅对该行生效，必须填写原因。
+
+```python
+api_key = "dummy-key-for-testing"  # keygate: ignore reason="test data"
+```
+
+### 方式二：路径或模式白名单
+
+在项目根目录创建 `keygate.toml`，指定要排除的路径或模式。
+
+```toml
+[allowlist]
+paths = ["vendor/*", "third_party/*"]  # 忽略非自有代码
+patterns = ["dummy", "example"]         # 忽略包含这些词的行
+```
+
+> 注意：将 `tests/*` 整体加入白名单，会导致 keygate 忽略测试代码中混入的真实密钥。测试中的误报请使用方式一（内联忽略）或方式三（baseline）处理。
+
+### 方式三：Baseline — 将现有检测结果注册为忽略
+
+适用于只想检测新增密钥、不想处理历史问题的场景。
+
+```bash
+keygate baseline create
+```
+
+当前检测结果会保存到 `.keygate.baseline.json`，此后相同位置的检测结果将被忽略。文件内容示例：
+
+```json
+{
+  "version": 1,
+  "entries": [
+    {
+      "fingerprint": "e5282a7860678bc768d280eb3e77d2ca8a44286357c743dd024d74fe0605fe09",
+      "file_path": "src/app/config.py",
+      "line_number": 42,
+      "rule_id": "url-credentials",
+      "created_at": "2026-04-22T09:30:00+00:00"
+    }
+  ]
+}
+```
+
+`fingerprint` 是 `file_path` + `line_number` + 匹配字符串的 SHA256 哈希值。不会存储实际密钥内容，因此将 baseline 文件提交到 Git 是安全的。
+
+如需将新发现的内容添加到 baseline：
+
+```bash
+keygate baseline update
+```
+
+#### 团队共享
+
+推荐将 `.keygate.baseline.json` 提交到 Git 并共享，这样团队所有成员使用相同的忽略列表。
+
+```bash
+git add .keygate.baseline.json
+git commit -m "Add keygate baseline"
+```
+
+新成员只需执行 `pipx install keygate` 和 `keygate install-hook`，即可自动使用共享的 baseline。
+
+---
+
+## 配置文件（可选）
+
+默认配置开箱即用，如需自定义，可在项目根目录创建 `keygate.toml`。
+
+```toml
+[scan]
+entropy_threshold = 4.2    # 随机字符串检测阈值（越低越严格）
+block_score = 70           # 达到此分数及以上时阻止提交
+
+[allowlist]
+paths = ["vendor/*"]
+patterns = ["dummy", "example"]
+
+[baseline]
+path = ".keygate.baseline.json"
+```
+
+未提供配置文件时使用默认值。
+
+---
+
+## 常见问题
+
+**Q. 不小心提交了密钥怎么办？**
+
+A. 立即撤销（rotate）该密钥。仅从 Git 历史中删除是不够的。应假设泄露的密钥已落入攻击者手中。
+
+**Q. 如何临时禁用钩子？**
+
+A. 使用 `git commit --no-verify` 可跳过包括 keygate 在内的所有钩子。不建议日常使用。
+
+**Q. 如何在团队中共享配置？**
+
+A. 将 `keygate.toml` 和 `.keygate.baseline.json` 提交到 Git 共享。每位成员需单独执行 `keygate install-hook`。
+
+---
+
+## 免责声明
+
+`keygate` 是一个尽力而为的检测工具，使用前请了解以下内容。
+
+- **不保证完整检测**：未知密钥格式、混淆值或自定义格式可能无法被检测到（漏报）。
+- **可能存在误报**：非密钥字符串可能被标记。请使用白名单 / baseline / 内联忽略处理。
+- **不是密钥管理的替代方案**：本工具是提交时的额外防护层。密钥应通过环境变量、密钥管理器或 KMS 等方式管理，不应存储在仓库中。
+- **钩子可被绕过**：`git commit --no-verify` 会跳过所有钩子。如需组织级管控，请结合服务端检查（pre-receive hook、CI 扫描等）使用。
+- **因漏报导致的密钥泄露，责任由使用者承担**：因使用本工具造成的任何损失，作者及贡献者概不负责（详见 [LICENSE](LICENSE)）。
+- **检测到密钥时请及时轮换**：即使提交被阻止，密钥值仍可能残留在本地文件、编辑器历史、剪贴板或其他设备中。
+
+本工具定位为捕捉人为失误的最后一道防线，而非正确密钥管理实践的替代品。
+
+---
+
+## 许可证
+
+以 [MIT License](LICENSE) 发布。包括商业用途在内，可自由使用、修改和再分发。详见 [LICENSE](LICENSE)。

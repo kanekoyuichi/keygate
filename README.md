@@ -6,7 +6,7 @@
 
 A Git pre-commit hook that **prevents accidental commits of API keys and passwords**.
 
-[日本語](https://github.com/kanekoyuichi/keygate/blob/main/README.ja.md)
+[日本語](https://github.com/kanekoyuichi/keygate/blob/main/README.ja.md) | [中文](https://github.com/kanekoyuichi/keygate/blob/main/README.zh.md)
 
 ---
 
