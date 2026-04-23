@@ -1,5 +1,9 @@
 # keygate
 
+[![PyPI version](https://img.shields.io/pypi/v/keygate.svg)](https://pypi.org/project/keygate/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+
 **APIキーやパスワードを誤って Git にコミットしてしまう事故を防ぐツール**です。
 
 ---
