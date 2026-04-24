@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.7] - 2026-04-24
+
+### Improvements
+
+- Return a clear user-facing error when `git` is not installed instead of surfacing `FileNotFoundError`
+- Add regression coverage for `scan` and `install-hook` behavior when `git` is missing
+
 ## [0.1.6] - 2026-04-24
 
 ### Features

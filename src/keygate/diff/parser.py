@@ -11,19 +11,25 @@ _HUNK_HEADER = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@")
 
 
 def get_staged_diff() -> str:
-    check = subprocess.run(
-        ["git", "rev-parse", "--is-inside-work-tree"],
-        capture_output=True,
-        text=True,
-    )
+    try:
+        check = subprocess.run(
+            ["git", "rev-parse", "--is-inside-work-tree"],
+            capture_output=True,
+            text=True,
+        )
+    except FileNotFoundError as e:
+        raise click.ClickException("git is required but was not found in PATH.") from e
     if check.returncode != 0:
         raise click.ClickException("not a git repository")
 
-    result = subprocess.run(
-        ["git", "diff", "--cached", "--unified=0"],
-        capture_output=True,
-        text=True,
-    )
+    try:
+        result = subprocess.run(
+            ["git", "diff", "--cached", "--unified=0"],
+            capture_output=True,
+            text=True,
+        )
+    except FileNotFoundError as e:
+        raise click.ClickException("git is required but was not found in PATH.") from e
     if result.returncode != 0:
         raise click.ClickException(f"git diff failed: {result.stderr.strip()}")
     return result.stdout

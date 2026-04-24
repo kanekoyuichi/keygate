@@ -1,4 +1,9 @@
-from keygate.diff.parser import parse_diff
+import subprocess
+
+import click
+import pytest
+
+from keygate.diff.parser import get_staged_diff, parse_diff
 
 SAMPLE_DIFF = """\
 diff --git a/config.py b/config.py
@@ -73,3 +78,13 @@ def test_parse_multi_file():
 
 def test_empty_diff():
     assert parse_diff("") == []
+
+
+def test_get_staged_diff_without_git_raises(monkeypatch):
+    def raise_file_not_found(*args, **kwargs):
+        raise FileNotFoundError("git")
+
+    monkeypatch.setattr(subprocess, "run", raise_file_not_found)
+
+    with pytest.raises(click.ClickException, match="git is required but was not found in PATH."):
+        get_staged_diff()

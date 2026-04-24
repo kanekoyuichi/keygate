@@ -9,12 +9,15 @@ import click
 
 
 def _git_path(repo_root: Path, path_name: str) -> Path:
-    result = subprocess.run(
-        ["git", "rev-parse", "--git-path", path_name],
-        capture_output=True,
-        text=True,
-        cwd=repo_root,
-    )
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--git-path", path_name],
+            capture_output=True,
+            text=True,
+            cwd=repo_root,
+        )
+    except FileNotFoundError as e:
+        raise click.ClickException("git is required but was not found in PATH.") from e
     if result.returncode != 0:
         raise click.ClickException("Not a git repository.")
     return Path(result.stdout.strip())

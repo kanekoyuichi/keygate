@@ -52,3 +52,13 @@ def test_hook_uses_current_python_environment(git_repo):
 def test_install_outside_git_raises(tmp_path):
     with pytest.raises(click.ClickException):
         install(tmp_path)
+
+
+def test_install_without_git_raises(tmp_path, monkeypatch):
+    def raise_file_not_found(*args, **kwargs):
+        raise FileNotFoundError("git")
+
+    monkeypatch.setattr(subprocess, "run", raise_file_not_found)
+
+    with pytest.raises(click.ClickException, match="git is required but was not found in PATH."):
+        install(tmp_path)
