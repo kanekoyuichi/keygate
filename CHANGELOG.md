@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.6] - 2026-04-24
+
+### Features
+
+- Add `keygate --version` to report the current CLI version
+
+### Improvements
+
+- Keep top-level and subcommand help text aligned with the current JSON, baseline, and hook behavior
+
 ## [0.1.5] - 2026-04-24
 
 ### Features

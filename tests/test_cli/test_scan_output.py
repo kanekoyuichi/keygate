@@ -171,6 +171,13 @@ def test_main_help_lists_subcommands():
     assert "keygate scan --format json" in result.output
 
 
+def test_main_version_option():
+    runner = CliRunner()
+    result = runner.invoke(cli.main, ["--version"])
+    assert result.exit_code == 0
+    assert "keygate, version 0.1.6" in result.output
+
+
 def test_install_hook_help_mentions_hooks_path():
     runner = CliRunner()
     result = runner.invoke(cli.main, ["install-hook", "--help"])

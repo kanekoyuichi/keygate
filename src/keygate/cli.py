@@ -113,6 +113,7 @@ def _resolve_format(format_opt: str | None, json_flag: bool, profile: str | None
         "  keygate baseline create"
     ),
 )
+@click.version_option("0.1.6", prog_name="keygate")
 def main() -> None:
     """keygate - Git pre-commit secret scanner."""
 
