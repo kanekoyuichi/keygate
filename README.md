@@ -55,6 +55,10 @@ cd path/to/your-project
 keygate install-hook
 ```
 
+`install-hook` writes to the hooks directory Git actually uses. If your repo has `core.hooksPath` configured, keygate installs the hook there instead of forcing `.git/hooks`.
+
+The generated hook prefers the current Python environment (`python -m keygate.cli scan`) and falls back to `keygate scan`, which makes it more reliable on systems where the hook PATH is limited.
+
 That's all the setup you need.
 
 ### Step 3: Use it
@@ -63,7 +67,7 @@ Just run `git add` and `git commit` as usual. If nothing dangerous is found, not
 
 If a secret is detected, the commit is blocked like this:
 
-```
+```text
 [BLOCK] High confidence secret detected
 
 File: config.py:12
@@ -114,7 +118,7 @@ keygate scan --profile agent  # forces JSON, no human prose
 
 Default text output starts with a machine-readable summary line so simple tools can also pick up the status:
 
-```
+```text
 [KEYGATE] status=block findings=1
 ```
 
@@ -174,6 +178,8 @@ The current findings are saved to `.keygate.baseline.json`. From that point on, 
 ```
 
 The `fingerprint` is a SHA256 hash of `file_path` + `line_number` + matched string. The actual secret value is never stored, so committing the baseline file to Git is safe.
+
+If `.keygate.baseline.json` already exists, `keygate baseline create` preserves existing entries and adds newly detected findings on top. Re-running it will not silently discard your current baseline.
 
 To add newly discovered findings to the baseline:
 

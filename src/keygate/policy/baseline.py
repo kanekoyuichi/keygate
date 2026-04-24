@@ -33,14 +33,19 @@ class BaselineStore:
         }
         self._path.write_text(json.dumps(data, indent=2, ensure_ascii=False))
 
+    def count(self) -> int:
+        return len(self._entries)
+
     def check(self, diff_line: DiffLine, rule_match: RuleMatch) -> PolicyResult:
         fp = _fingerprint(diff_line.file_path, diff_line.line_number, rule_match.matched_text)
         if fp in self._entries:
             return PolicyResult(suppressed=True, reason=f"baseline:{fp[:8]}")
         return PolicyResult(suppressed=False, reason=None)
 
-    def add(self, diff_line: DiffLine, rule_match: RuleMatch) -> None:
+    def add(self, diff_line: DiffLine, rule_match: RuleMatch) -> bool:
         fp = _fingerprint(diff_line.file_path, diff_line.line_number, rule_match.matched_text)
+        if fp in self._entries:
+            return False
         self._entries[fp] = {
             "fingerprint": fp,
             "file_path": diff_line.file_path,
@@ -48,8 +53,12 @@ class BaselineStore:
             "rule_id": rule_match.rule_id,
             "created_at": datetime.now(timezone.utc).isoformat(),
         }
+        return True
 
-    def add_from_results(self, results: list[ScanResult]) -> None:
+    def add_from_results(self, results: list[ScanResult]) -> int:
+        added = 0
         for result in results:
             for match in result.rule_matches:
-                self.add(result.diff_line, match)
+                if self.add(result.diff_line, match):
+                    added += 1
+        return added

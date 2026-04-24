@@ -53,6 +53,10 @@ cd path/to/your-project   # 自分のプロジェクトに移動
 keygate install-hook
 ```
 
+`install-hook` は Git が実際に使う hooks ディレクトリへ書き込みます。`core.hooksPath` を設定しているリポジトリでも、`.git/hooks` に固定せず正しい配置先を使います。
+
+生成される hook は、まず現在の Python 実行環境で `python -m keygate.cli scan` を実行し、それが使えない場合だけ `keygate scan` にフォールバックします。hook 実行時の `PATH` が制限されている環境でも壊れにくくするためです。
+
 これで準備完了です。
 
 ### ステップ3: 実際に使ってみる
@@ -172,6 +176,8 @@ keygate baseline create
 ```
 
 `fingerprint` は `file_path` + `line_number` + 検知文字列 の SHA256 ハッシュです。値そのものは保存されないため、baseline を Git にコミットしても機密情報は漏れません。
+
+すでに `.keygate.baseline.json` がある状態で `keygate baseline create` を再実行しても、既存 entries は保持されます。再作成で baseline が勝手に縮むことはありません。
 
 新しく見逃しリストに追加したいものが出てきたら、こうします：
 

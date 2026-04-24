@@ -99,31 +99,62 @@ def _resolve_format(format_opt: str | None, json_flag: bool, profile: str | None
     return "text"
 
 
-@click.group()
+@click.group(
+    help=(
+        "Block likely secrets before commit.\n\n"
+        "By default, keygate scans added lines from 'git diff --cached' only.\n"
+        "Use 'keygate scan --format json' for machine-readable output, or "
+        "'keygate scan --profile agent' for AI-agent workflows.\n\n"
+        "\b\n"
+        "Examples:\n"
+        "  keygate scan\n"
+        "  keygate scan --format json\n"
+        "  keygate install-hook\n"
+        "  keygate baseline create"
+    ),
+)
 def main() -> None:
     """keygate - Git pre-commit secret scanner."""
 
 
-@main.command()
+@main.command(
+    help=(
+        "Scan staged additions for secrets.\n\n"
+        "Scans added lines from 'git diff --cached' only.\n"
+        "Default output is human-readable text.\n"
+        "Use '--format json' or '--json' for JSON-only stdout.\n"
+        "Use '--profile agent' to force JSON output for AI agents.\n\n"
+        "Exit codes:\n"
+        "  0  pass or warn\n"
+        "  1  block\n"
+        "  2  usage error\n\n"
+        "\b\n"
+        "Examples:\n"
+        "  keygate scan\n"
+        "  keygate scan --format json\n"
+        "  keygate scan --json\n"
+        "  keygate scan --profile agent"
+    ),
+)
 @click.option(
     "--format",
     "format_opt",
     type=click.Choice(["text", "json"]),
     default=None,
-    help="Output format (default: text).",
+    help="Output format. 'json' writes JSON only to stdout; default is text.",
 )
 @click.option(
     "--json",
     "json_flag",
     is_flag=True,
     default=False,
-    help="Alias for --format json.",
+    help="Alias for '--format json'.",
 )
 @click.option(
     "--profile",
     type=click.Choice(["agent"]),
     default=None,
-    help="Output profile. 'agent' forces JSON output for AI agents.",
+    help="Output profile. 'agent' forces JSON-only output for AI agents.",
 )
 def scan(format_opt: str | None, json_flag: bool, profile: str | None) -> None:
     """Scan staged diff for secrets."""
@@ -141,32 +172,75 @@ def scan(format_opt: str | None, json_flag: bool, profile: str | None) -> None:
         raise SystemExit(1)
 
 
-@main.command("install-hook")
+@main.command(
+    "install-hook",
+    help=(
+        "Install keygate as a Git pre-commit hook.\n\n"
+        "The hook is installed into the hooks directory Git actually uses.\n"
+        "If 'core.hooksPath' is configured, keygate installs there instead of "
+        "forcing '.git/hooks'. The generated hook prefers the current Python "
+        "environment and falls back to 'keygate scan' when needed.\n\n"
+        "\b\n"
+        "Example:\n"
+        "  keygate install-hook"
+    ),
+)
 def install_hook() -> None:
     """Install keygate as a pre-commit hook."""
     install(Path.cwd())
 
 
-@main.group(name="baseline")
+@main.group(
+    name="baseline",
+    help=(
+        "Manage baseline fingerprints for accepted existing findings.\n\n"
+        "Baselines let you ignore known findings and focus on newly added ones."
+    ),
+)
 def baseline_group() -> None:
     """Manage baseline fingerprints."""
 
 
-@baseline_group.command("create")
+@baseline_group.command(
+    "create",
+    help=(
+        "Create or extend the baseline from current findings.\n\n"
+        "Existing baseline entries are preserved. Newly detected findings are "
+        "added to '.keygate.baseline.json'. Use this when you want to accept "
+        "current findings and focus on new ones going forward.\n\n"
+        "\b\n"
+        "Example:\n"
+        "  keygate baseline create"
+    ),
+)
 def baseline_create() -> None:
     """Create baseline from current scan results."""
     repo_root = Path.cwd()
     cfg = load_config(repo_root)
     store = baseline.BaselineStore(repo_root / cfg.baseline_path)
+    store.load()
 
     report = _run_scan(repo_root)
     all_results = report.blocked + report.warned
-    store.add_from_results(all_results)
+    added = store.add_from_results(all_results)
     store.save()
-    click.echo(f"Baseline created: {len(all_results)} finding(s) recorded.")
+    click.echo(
+        f"Baseline created: {store.count()} total finding(s) recorded "
+        f"({added} new)."
+    )
 
 
-@baseline_group.command("update")
+@baseline_group.command(
+    "update",
+    help=(
+        "Add newly detected findings to an existing baseline.\n\n"
+        "Unlike an initial create flow, this command reports only the number of "
+        "new fingerprints added.\n\n"
+        "\b\n"
+        "Example:\n"
+        "  keygate baseline update"
+    ),
+)
 def baseline_update() -> None:
     """Update baseline with new findings."""
     repo_root = Path.cwd()
@@ -176,9 +250,9 @@ def baseline_update() -> None:
 
     report = _run_scan(repo_root)
     all_results = report.blocked + report.warned
-    store.add_from_results(all_results)
+    added = store.add_from_results(all_results)
     store.save()
-    click.echo(f"Baseline updated: {len(all_results)} new finding(s) added.")
+    click.echo(f"Baseline updated: {added} new finding(s) added.")
 
 
 if __name__ == "__main__":

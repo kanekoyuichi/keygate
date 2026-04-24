@@ -53,6 +53,10 @@ cd path/to/your-project
 keygate install-hook
 ```
 
+`install-hook` 会写入 Git 实际使用的 hooks 目录。如果仓库配置了 `core.hooksPath`，keygate 会安装到该目录，而不是固定写入 `.git/hooks`。
+
+生成的 hook 会优先使用当前 Python 环境执行 `python -m keygate.cli scan`，只有在该方式不可用时才回退到 `keygate scan`。这样在 hook 执行时 PATH 受限的环境里也更可靠。
+
 配置完成。
 
 ### 第三步：使用
@@ -172,6 +176,8 @@ keygate baseline create
 ```
 
 `fingerprint` 是 `file_path` + `line_number` + 匹配字符串的 SHA256 哈希值。不会存储实际密钥内容，因此将 baseline 文件提交到 Git 是安全的。
+
+如果 `.keygate.baseline.json` 已经存在，重新执行 `keygate baseline create` 会保留已有 entries，并在其基础上追加新检测结果，不会悄悄覆盖掉现有 baseline。
 
 如需将新发现的内容添加到 baseline：
 

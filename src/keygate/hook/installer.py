@@ -1,20 +1,16 @@
 from __future__ import annotations
 
+import shlex
 import subprocess
+import sys
 from pathlib import Path
 
 import click
 
-_HOOK_SCRIPT = """\
-#!/bin/sh
-# Installed by keygate
-keygate scan
-"""
 
-
-def _find_git_dir(repo_root: Path) -> Path:
+def _git_path(repo_root: Path, path_name: str) -> Path:
     result = subprocess.run(
-        ["git", "rev-parse", "--git-dir"],
+        ["git", "rev-parse", "--git-path", path_name],
         capture_output=True,
         text=True,
         cwd=repo_root,
@@ -24,12 +20,29 @@ def _find_git_dir(repo_root: Path) -> Path:
     return Path(result.stdout.strip())
 
 
-def install(repo_root: Path) -> None:
-    git_dir = _find_git_dir(repo_root)
-    if not git_dir.is_absolute():
-        git_dir = repo_root / git_dir
+def _build_hook_script() -> str:
+    python_executable = shlex.quote(sys.executable)
+    return f"""\
+#!/bin/sh
+# Installed by keygate
 
-    hooks_dir = git_dir / "hooks"
+if [ -x {python_executable} ]; then
+  exec {python_executable} -m keygate.cli scan
+fi
+
+if command -v keygate >/dev/null 2>&1; then
+  exec keygate scan
+fi
+
+echo "keygate is not available. Reinstall it or update PATH." >&2
+exit 1
+"""
+
+
+def install(repo_root: Path) -> None:
+    hooks_dir = _git_path(repo_root, "hooks")
+    if not hooks_dir.is_absolute():
+        hooks_dir = repo_root / hooks_dir
     hooks_dir.mkdir(exist_ok=True)
     hook_path = hooks_dir / "pre-commit"
 
@@ -39,6 +52,6 @@ def install(repo_root: Path) -> None:
             abort=True,
         )
 
-    hook_path.write_text(_HOOK_SCRIPT)
+    hook_path.write_text(_build_hook_script())
     hook_path.chmod(0o755)
     click.echo(f"Installed pre-commit hook: {hook_path}")
