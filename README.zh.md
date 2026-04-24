@@ -91,6 +91,20 @@ To ignore:
 - `Reason` — 触发检测的原因
 - `Remediation` — 修复建议
 
+### 第四步：升级
+
+如果你是通过 `pipx` 安装的 `keygate`，可以这样升级：
+
+```bash
+pipx upgrade keygate
+```
+
+如果你是通过 `pip` 安装的，可以使用：
+
+```bash
+python -m pip install -U keygate
+```
+
 ---
 
 ## 手动扫描
@@ -232,6 +246,10 @@ A. 使用 `git commit --no-verify` 可跳过包括 keygate 在内的所有钩子
 **Q. 如何在团队中共享配置？**
 
 A. 将 `keygate.toml` 和 `.keygate.baseline.json` 提交到 Git 共享。每位成员需单独执行 `keygate install-hook`。
+
+**Q. 如何升级 keygate？**
+
+A. 如果是通过 `pipx` 安装的，运行 `pipx upgrade keygate`。如果是通过 `pip` 安装的，运行 `python -m pip install -U keygate`。
 
 ---
 

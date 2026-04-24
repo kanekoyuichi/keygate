@@ -91,6 +91,20 @@ To ignore:
 - `Reason` — 検知の理由
 - `Remediation` — 直し方の提案
 
+### ステップ4: アップデートする
+
+`pipx` で `keygate` をインストールした場合は、次で更新できます。
+
+```bash
+pipx upgrade keygate
+```
+
+`pip` でインストールした場合は、次を使います。
+
+```bash
+python -m pip install -U keygate
+```
+
 ---
 
 ## 手動でスキャンする
@@ -232,6 +246,10 @@ A. `git commit --no-verify` で `keygate` を含むすべてのフックをス�
 **Q. チームで共有するには？**
 
 A. `keygate.toml` と `.keygate.baseline.json` を Git にコミットして共有してください。各メンバーは `keygate install-hook` をそれぞれ実行する必要があります。
+
+**Q. keygate 自体を更新するには？**
+
+A. `pipx` で入れた場合は `pipx upgrade keygate`、`pip` で入れた場合は `python -m pip install -U keygate` を使ってください。
 
 ---
 

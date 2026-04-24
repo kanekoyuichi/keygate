@@ -93,6 +93,20 @@ To ignore:
 - `Reason` — why it was flagged
 - `Remediation` — suggested fixes
 
+### Step 4: Update
+
+If you installed `keygate` with `pipx`, upgrade it like this:
+
+```bash
+pipx upgrade keygate
+```
+
+If you installed it with `pip`, use:
+
+```bash
+python -m pip install -U keygate
+```
+
 ---
 
 ## Manual scan
@@ -234,6 +248,10 @@ A. Use `git commit --no-verify` to skip all hooks including keygate. Not recomme
 **Q. How do we share this across a team?**
 
 A. Commit `keygate.toml` and `.keygate.baseline.json` to Git. Each team member needs to run `keygate install-hook` individually.
+
+**Q. How do I update keygate?**
+
+A. If you installed it with `pipx`, run `pipx upgrade keygate`. If you installed it with `pip`, run `python -m pip install -U keygate`.
 
 ---
 
