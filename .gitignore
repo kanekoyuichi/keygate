@@ -20,9 +20,6 @@ env/
 *.swp
 .DS_Store
 
-# Internal design notes (not user-facing)
-docs/
-
 .claude/
 .codex/
 CLAUDE.md

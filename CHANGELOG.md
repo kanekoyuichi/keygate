@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.5] - 2026-04-24
+
+### Features
+
+- Improve CLI help text with clearer command descriptions, JSON output guidance, exit codes, and examples
+
+### Improvements
+
+- Make `baseline create` preserve existing entries and report total/new counts correctly
+- Make `baseline update` report only newly added fingerprints
+- Install hooks into the Git hooks path actually in use, including `core.hooksPath`
+- Generate hooks that prefer the current Python environment and fall back to `keygate scan`
+- Add regression coverage for baseline retention, hook installation behavior, and expanded help output
+
+### Docs
+
+- Document `core.hooksPath` support and baseline preservation in the README set
+- Consolidate technical docs under `docs/SPEC.md` and add `docs/SPEC.ja.md`
+
 ## [0.1.4] - 2026-04-24
 
 ### Improvements
