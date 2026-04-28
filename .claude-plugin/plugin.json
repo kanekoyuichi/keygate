@@ -1,6 +1,6 @@
 {
   "name": "keygate",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Block likely secrets before commit. Wraps the keygate CLI as a Claude Code skill and slash commands.",
   "author": {
     "name": "Yuichi Kaneko"
@@ -8,5 +8,7 @@
   "homepage": "https://github.com/kanekoyuichi/keygate",
   "repository": "https://github.com/kanekoyuichi/keygate",
   "license": "MIT",
-  "keywords": ["security", "secrets", "git", "scanner", "pre-commit"]
+  "keywords": ["security", "secrets", "git", "scanner", "pre-commit"],
+  "skills": "./plugin/skills",
+  "commands": "./plugin/commands"
 }

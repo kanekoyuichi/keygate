@@ -9,7 +9,7 @@
       "name": "keygate",
       "source": "./",
       "description": "Pre-commit secret scanner with AI-agent-optimized JSON output",
-      "version": "0.1.9"
+      "version": "0.1.10"
     }
   ]
 }

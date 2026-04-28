@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.10] - 2026-04-28
+
+### Improvements
+
+- Consolidate `skills/` and `commands/` under a `plugin/` directory at the repository root, keeping the project root tidy
+- Declare the new locations explicitly in `.claude-plugin/plugin.json` via the official `skills` / `commands` custom-path fields
+
 ## [0.1.9] - 2026-04-28
 
 ### Improvements
