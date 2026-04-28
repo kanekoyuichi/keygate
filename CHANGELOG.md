@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.11] - 2026-04-28
+
+### Fixes
+
+- Move the marketplace description to `metadata.description` so `claude plugin validate .` passes with Claude Code 2.1.116
+
 ## [0.1.10] - 2026-04-28
 
 ### Improvements
