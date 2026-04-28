@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.9] - 2026-04-28
+
+### Improvements
+
+- Align Claude Code plugin layout with the official spec: move `skills/` and `commands/` to the plugin root (out of `.claude-plugin/`) so they are auto-discovered without custom path declarations
+- Drop the now-unnecessary `skills` and `commands` fields from `.claude-plugin/plugin.json`
+- Promote `description` to the top level in `.claude-plugin/marketplace.json` (the `metadata.description` form was a backward-compat fallback)
+
 ## [0.1.8] - 2026-04-28
 
 ### Features
