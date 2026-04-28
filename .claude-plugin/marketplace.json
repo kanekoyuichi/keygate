@@ -1,0 +1,17 @@
+{
+  "name": "keygate",
+  "metadata": {
+    "description": "Pre-commit secret scanning skill and slash commands for Claude Code, wrapping the keygate CLI"
+  },
+  "owner": {
+    "name": "Yuichi Kaneko"
+  },
+  "plugins": [
+    {
+      "name": "keygate",
+      "source": "./",
+      "description": "Pre-commit secret scanner with AI-agent-optimized JSON output",
+      "version": "0.1.8"
+    }
+  ]
+}

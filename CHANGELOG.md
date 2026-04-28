@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.8] - 2026-04-28
+
+### Features
+
+- Add Claude Code plugin support: install via `/plugin marketplace add kanekoyuichi/keygate` followed by `/plugin install keygate`
+- Bundle `keygate-secret-scan` skill that triggers automatically before commits and runs the agent JSON profile
+- Add slash commands `/keygate:scan`, `/keygate:install-hook`, `/keygate:baseline-create`, `/keygate:baseline-update`
+
+### Docs
+
+- Document Claude Code plugin usage in all README languages (English / 日本語 / 中文)
+- Document `uv tool install keygate` as an installation option alongside `pipx` and `pip --user`
+
 ## [0.1.7] - 2026-04-24
 
 ### Improvements

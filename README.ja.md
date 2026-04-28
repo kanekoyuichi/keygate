@@ -107,6 +107,42 @@ python -m pip install -U keygate
 
 ---
 
+## Claude Code プラグインとして使う
+
+`keygate` は [Claude Code](https://docs.claude.com/ja/docs/claude-code) のプラグインとしても利用できます。プラグインを導入すると、Claude がコミット前のステージ変更を自動でスキャンし、Claude Code 内からスラッシュコマンドで keygate を直接操作できます。
+
+### ステップ 1: keygate CLI をインストール
+
+プラグインは CLI のラッパーなので、本体は別途必要です。いずれか1つを実行してください。
+
+```bash
+pipx install keygate          # pipx を使う場合
+uv tool install keygate       # uv を使う場合
+pip install --user keygate    # フォールバック
+```
+
+### ステップ 2: マーケットプレイスを追加してプラグインを導入
+
+Claude Code 内で以下を実行します。
+
+```
+/plugin marketplace add kanekoyuichi/keygate
+/plugin install keygate
+```
+
+### 提供される機能
+
+- **Skill `keygate-secret-scan`** — Claude がコミット直前やシークレットらしき値を含む変更を検知したときに自律起動します。内部で `keygate scan --profile agent` を実行し、JSON 結果を解釈してマスク済み snippet と共に報告します。
+- **スラッシュコマンド**:
+  - `/keygate:scan` — ステージ変更をその場でスキャン
+  - `/keygate:install-hook` — Git pre-commit hook を導入
+  - `/keygate:baseline-create` — 現在の検知を baseline に記録
+  - `/keygate:baseline-update` — 新規検知のみを baseline に追加
+
+プラグインは内部で agent JSON プロファイル（`schema_version: "1"`）を使うため、検知ロジック・ポリシーは CLI と完全に同じです。
+
+---
+
 ## 手動でスキャンする
 
 フックを使わず、その場でチェックすることもできます。

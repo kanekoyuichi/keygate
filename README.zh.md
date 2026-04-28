@@ -107,6 +107,42 @@ python -m pip install -U keygate
 
 ---
 
+## 作为 Claude Code 插件使用
+
+`keygate` 还可以作为 [Claude Code](https://docs.claude.com/en/docs/claude-code) 插件使用。安装后，Claude 会在你提交前自动扫描已暂存的变更，也可以在 Claude Code 中通过斜杠命令直接调用 keygate。
+
+### 第一步：安装 keygate CLI
+
+插件是 CLI 的封装，所以仍需先安装 CLI。任选其一：
+
+```bash
+pipx install keygate          # 使用 pipx
+uv tool install keygate       # 使用 uv
+pip install --user keygate    # 备选
+```
+
+### 第二步：添加 marketplace 并安装插件
+
+在 Claude Code 中执行：
+
+```
+/plugin marketplace add kanekoyuichi/keygate
+/plugin install keygate
+```
+
+### 提供的能力
+
+- **Skill `keygate-secret-scan`** —— 当用户即将提交，或暂存变更中出现疑似凭据值时，Claude 会自动触发该技能。内部执行 `keygate scan --profile agent`，解析 JSON 输出，并使用已掩码的 snippet 报告检测结果。
+- **斜杠命令**：
+  - `/keygate:scan` —— 立即扫描已暂存的变更
+  - `/keygate:install-hook` —— 安装 Git pre-commit hook
+  - `/keygate:baseline-create` —— 将当前检测结果加入 baseline
+  - `/keygate:baseline-update` —— 仅追加新检测结果到 baseline
+
+插件内部使用 agent JSON profile（`schema_version: "1"`），检测逻辑与策略与 CLI 完全一致。
+
+---
+
 ## 手动扫描
 
 也可以不使用钩子，直接在当前目录执行扫描。

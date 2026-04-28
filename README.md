@@ -109,6 +109,42 @@ python -m pip install -U keygate
 
 ---
 
+## Use with Claude Code (plugin)
+
+`keygate` is also available as a [Claude Code](https://docs.claude.com/en/docs/claude-code) plugin. With it installed, Claude can scan staged changes for secrets automatically before you commit, and you can run keygate operations from Claude Code as slash commands.
+
+### Step 1: Install the keygate CLI
+
+The plugin wraps the CLI, so the CLI must be installed first. Pick one:
+
+```bash
+pipx install keygate          # if you use pipx
+uv tool install keygate       # if you use uv
+pip install --user keygate    # fallback
+```
+
+### Step 2: Add the marketplace and install the plugin
+
+In Claude Code:
+
+```
+/plugin marketplace add kanekoyuichi/keygate
+/plugin install keygate
+```
+
+### What you get
+
+- **Skill `keygate-secret-scan`** — Claude triggers this automatically before commits or when staged changes contain credential-like values. It runs `keygate scan --profile agent`, parses the JSON output, and reports findings with masked snippets.
+- **Slash commands**:
+  - `/keygate:scan` — scan staged changes on demand
+  - `/keygate:install-hook` — install the Git pre-commit hook
+  - `/keygate:baseline-create` — record current findings as accepted
+  - `/keygate:baseline-update` — append newly-detected findings
+
+The plugin uses keygate's agent JSON profile (`schema_version: "1"`) internally, so detection logic and policies are identical to the CLI.
+
+---
+
 ## Manual scan
 
 You can also scan without using the hook.

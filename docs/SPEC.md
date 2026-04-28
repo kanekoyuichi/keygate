@@ -22,6 +22,9 @@ Use `keygate` when you want a fast, offline check that runs at commit time and f
 - scan unstaged files
 - call external APIs to validate credentials
 - use an LLM to decide whether a value is secret
+- ship as an IDE plugin (e.g., VS Code extension)
+
+> Note: the Claude Code plugin under `.claude-plugin/` (added in 0.1.8) is a thin wrapper around the existing CLI, exposed as a Skill and slash commands. It calls `keygate scan --profile agent` internally and does not introduce LLM-based detection or a new IDE integration. The detection logic, policies, and exit codes remain identical to the CLI.
 
 ## Scan target
 
