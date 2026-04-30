@@ -1,6 +1,6 @@
 import json
 
-from keygate.models import DiffLine, RuleMatch
+from keygate.models import DiffLine, RuleMatch, ScanResult, Verdict
 from keygate.policy.baseline import BaselineStore, _fingerprint
 
 
@@ -15,6 +15,17 @@ def make_match(matched_text="AKIAIOSFODNN7EXAMPLE", rule_id="aws-access-key"):
         score=90,
         description="AWS key",
         remediation=[],
+    )
+
+
+def make_result(line=None, matches=None):
+    return ScanResult(
+        diff_line=line or make_line(),
+        total_score=90,
+        verdict=Verdict.BLOCK,
+        rule_matches=matches if matches is not None else [make_match()],
+        score_breakdown={"entropy": 20},
+        reason="sensitive context detected",
     )
 
 
@@ -76,3 +87,25 @@ def test_saved_json_structure(tmp_path):
     assert "line_number" in entry
     assert "rule_id" in entry
     assert "created_at" in entry
+
+
+def test_add_from_results_records_context_entropy_finding(tmp_path):
+    store = BaselineStore(tmp_path / "baseline.json")
+    result = make_result(matches=[])
+
+    assert store.add_from_results([result]) == 1
+    assert store.add_from_results([result]) == 0
+    assert store.check_result(result).suppressed is True
+
+
+def test_check_result_requires_all_rule_matches_to_be_baselined(tmp_path):
+    store = BaselineStore(tmp_path / "baseline.json")
+    line = make_line()
+    known = make_match("known-match-1")
+    new = make_match("new-match-2")
+
+    store.add(line, known)
+    assert store.check_result(make_result(line=line, matches=[known, new])).suppressed is False
+
+    store.add(line, new)
+    assert store.check_result(make_result(line=line, matches=[known, new])).suppressed is True

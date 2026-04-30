@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.12] - 2026-04-30
+
+### Fixes
+
+- Restrict GitHub Actions token permissions for CI and PyPI publishing workflows
+- Resolve repository root through Git so subdirectory runs use the root config and baseline
+- Detect multiple secrets from the same rule on one added line
+- Let baselines record and suppress entropy/context-only findings without storing raw secret values
+- Require all rule matches on a line to be baselined before suppressing the finding
+
+### Improvements
+
+- Treat allowlist patterns as regular expressions and add case-insensitive keyword allowlists
+- Add regression coverage for workflow-reviewed scanner, baseline, allowlist, and repo-root behavior
+
 ## [0.1.11] - 2026-04-28
 
 ### Fixes

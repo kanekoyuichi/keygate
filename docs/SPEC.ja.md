@@ -80,6 +80,7 @@ block_score = 70
 [allowlist]
 paths = ["vendor/*"]
 patterns = ["dummy", "example"]
+keywords = ["fixture"]
 
 [baseline]
 path = ".keygate.baseline.json"

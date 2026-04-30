@@ -5,7 +5,7 @@ from pathlib import Path
 import click
 
 from keygate.config import load_config
-from keygate.diff.parser import get_staged_diff, parse_diff
+from keygate.diff.parser import get_repo_root, get_staged_diff, parse_diff
 from keygate.formatters import json as json_formatter
 from keygate.formatters import text as text_formatter
 from keygate.hook.installer import install
@@ -49,7 +49,12 @@ def _run_scan(repo_root: Path) -> ScanReport:
         if policy.suppressed:
             continue
 
-        policy = allowlist.check(line, cfg.allowlist_paths, cfg.allowlist_patterns)
+        policy = allowlist.check(
+            line,
+            cfg.allowlist_paths,
+            cfg.allowlist_patterns,
+            cfg.allowlist_keywords,
+        )
         if policy.suppressed:
             continue
 
@@ -64,9 +69,7 @@ def _run_scan(repo_root: Path) -> ScanReport:
         if result.verdict == Verdict.IGNORE:
             continue
 
-        if result.rule_matches and all(
-            store.check(line, m).suppressed for m in result.rule_matches
-        ):
+        if store.check_result(result).suppressed:
             continue
 
         if result.verdict == Verdict.BLOCK:
@@ -113,7 +116,7 @@ def _resolve_format(format_opt: str | None, json_flag: bool, profile: str | None
         "  keygate baseline create"
     ),
 )
-@click.version_option("0.1.11", prog_name="keygate")
+@click.version_option("0.1.12", prog_name="keygate")
 def main() -> None:
     """keygate - Git pre-commit secret scanner."""
 
@@ -161,7 +164,7 @@ def scan(format_opt: str | None, json_flag: bool, profile: str | None) -> None:
     """Scan staged diff for secrets."""
     output_format = _resolve_format(format_opt, json_flag, profile)
 
-    repo_root = Path.cwd()
+    repo_root = get_repo_root(Path.cwd())
     report = _run_scan(repo_root)
 
     if output_format == "json":
@@ -188,7 +191,7 @@ def scan(format_opt: str | None, json_flag: bool, profile: str | None) -> None:
 )
 def install_hook() -> None:
     """Install keygate as a pre-commit hook."""
-    install(Path.cwd())
+    install(get_repo_root(Path.cwd()))
 
 
 @main.group(
@@ -216,7 +219,7 @@ def baseline_group() -> None:
 )
 def baseline_create() -> None:
     """Create baseline from current scan results."""
-    repo_root = Path.cwd()
+    repo_root = get_repo_root(Path.cwd())
     cfg = load_config(repo_root)
     store = baseline.BaselineStore(repo_root / cfg.baseline_path)
     store.load()
@@ -244,7 +247,7 @@ def baseline_create() -> None:
 )
 def baseline_update() -> None:
     """Update baseline with new findings."""
-    repo_root = Path.cwd()
+    repo_root = get_repo_root(Path.cwd())
     cfg = load_config(repo_root)
     store = baseline.BaselineStore(repo_root / cfg.baseline_path)
     store.load()

@@ -260,6 +260,7 @@ block_score = 70           # この点数以上でコミットを止める
 [allowlist]
 paths = ["vendor/*"]
 patterns = ["dummy", "example"]
+keywords = ["fixture"]
 
 [baseline]
 path = ".keygate.baseline.json"

@@ -178,18 +178,16 @@ def _match_url_credentials(rule: Rule, m: re.Match[str]) -> RuleMatch:
 def scan_line(content: str) -> list[RuleMatch]:
     matches: list[RuleMatch] = []
     for rule in RULES:
-        m = rule.pattern.search(content)
-        if not m:
-            continue
-        if rule.rule_id == "url-credentials":
-            matches.append(_match_url_credentials(rule, m))
-        else:
-            matches.append(RuleMatch(
-                rule_id=rule.rule_id,
-                matched_text=m.group(0),
-                score=rule.score,
-                description=rule.description,
-                remediation=rule.remediation,
-                policy=rule.policy,
-            ))
+        for m in rule.pattern.finditer(content):
+            if rule.rule_id == "url-credentials":
+                matches.append(_match_url_credentials(rule, m))
+            else:
+                matches.append(RuleMatch(
+                    rule_id=rule.rule_id,
+                    matched_text=m.group(0),
+                    score=rule.score,
+                    description=rule.description,
+                    remediation=rule.remediation,
+                    policy=rule.policy,
+                ))
     return matches

@@ -175,7 +175,7 @@ def test_main_version_option():
     runner = CliRunner()
     result = runner.invoke(cli.main, ["--version"])
     assert result.exit_code == 0
-    assert "keygate, version 0.1.11" in result.output
+    assert "keygate, version 0.1.12" in result.output
 
 
 def test_install_hook_help_mentions_hooks_path():
@@ -195,6 +195,7 @@ def test_baseline_create_help_mentions_existing_entries():
 
 def test_baseline_create_preserves_existing_entries(tmp_path, monkeypatch):
     runner = CliRunner()
+    monkeypatch.setattr(cli, "get_repo_root", lambda _cwd: tmp_path)
     monkeypatch.setattr(cli, "_run_scan", lambda _root: _make_warn_report())
     monkeypatch.chdir(tmp_path)
 
@@ -228,6 +229,7 @@ def test_baseline_create_preserves_existing_entries(tmp_path, monkeypatch):
 
 def test_baseline_update_reports_only_new_entries(tmp_path, monkeypatch):
     runner = CliRunner()
+    monkeypatch.setattr(cli, "get_repo_root", lambda _cwd: tmp_path)
     monkeypatch.setattr(cli, "_run_scan", lambda _root: _make_warn_report())
     monkeypatch.chdir(tmp_path)
 

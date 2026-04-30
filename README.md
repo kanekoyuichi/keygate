@@ -197,7 +197,8 @@ Create a `keygate.toml` file in your project root and specify paths or patterns 
 ```toml
 [allowlist]
 paths = ["vendor/*", "third_party/*"]  # ignore code you don't own
-patterns = ["dummy", "example"]         # ignore lines containing these words
+patterns = ["dummy", "example"]         # regex patterns for lines to ignore
+keywords = ["fixture"]                  # case-insensitive keywords for lines to ignore
 ```
 
 > Note: Adding `tests/*` to the allowlist globally will cause keygate to miss real secrets embedded in test code. Use option 1 (inline ignore) or option 3 (baseline) for false positives in tests.
@@ -262,6 +263,7 @@ block_score = 70           # commits are blocked at this score or above
 [allowlist]
 paths = ["vendor/*"]
 patterns = ["dummy", "example"]
+keywords = ["fixture"]
 
 [baseline]
 path = ".keygate.baseline.json"

@@ -36,6 +36,17 @@ def test_rule_match_has_remediation():
     assert len(matches[0].remediation) > 0
 
 
+def test_multiple_matches_for_same_rule_are_returned():
+    matches = scan_line(
+        "old=AKIAAAAAAAAAAAAAAAAA new=ASIABBBBBBBBBBBBBBBB"  # keygate: ignore reason="test fixture"
+    )
+    aws_matches = [m for m in matches if m.rule_id == "aws-access-key"]
+    assert [m.matched_text for m in aws_matches] == [
+        "AKIAAAAAAAAAAAAAAAAA",  # keygate: ignore reason="test fixture"
+        "ASIABBBBBBBBBBBBBBBB",  # keygate: ignore reason="test fixture"
+    ]
+
+
 # ---------- Rule.policy classification ----------
 
 def test_all_rules_have_policy():

@@ -2,12 +2,28 @@ from __future__ import annotations
 
 import re
 import subprocess
+from pathlib import Path
 
 import click
 
 from keygate.models import DiffLine
 
 _HUNK_HEADER = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@")
+
+
+def get_repo_root(cwd: Path | None = None) -> Path:
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            cwd=cwd,
+        )
+    except FileNotFoundError as e:
+        raise click.ClickException("git is required but was not found in PATH.") from e
+    if result.returncode != 0:
+        raise click.ClickException("not a git repository")
+    return Path(result.stdout.strip())
 
 
 def get_staged_diff() -> str:

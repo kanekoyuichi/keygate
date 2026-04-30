@@ -14,6 +14,7 @@ class Config:
     warn_score: int = 40
     allowlist_paths: list[str] = field(default_factory=list)
     allowlist_patterns: list[str] = field(default_factory=list)
+    allowlist_keywords: list[str] = field(default_factory=list)
     baseline_path: str = ".keygate.baseline.json"
 
 
@@ -36,5 +37,6 @@ def load_config(repo_root: Path) -> Config:
         warn_score=scan.get("warn_score", 40),
         allowlist_paths=allowlist.get("paths", []),
         allowlist_patterns=allowlist.get("patterns", []),
+        allowlist_keywords=allowlist.get("keywords", []),
         baseline_path=baseline.get("path", ".keygate.baseline.json"),
     )

@@ -8,11 +8,16 @@ from pathlib import Path
 from keygate.models import DiffLine, PolicyResult, RuleMatch, ScanResult
 
 _VERSION = 1
+_SYNTHETIC_RULE_ID = "context-entropy"
 
 
 def _fingerprint(file_path: str, line_number: int, matched_text: str) -> str:
     data = f"{file_path}:{line_number}:{matched_text}"
     return hashlib.sha256(data.encode()).hexdigest()
+
+
+def _synthetic_matched_text(diff_line: DiffLine) -> str:
+    return f"{_SYNTHETIC_RULE_ID}:{diff_line.content}"
 
 
 class BaselineStore:
@@ -42,6 +47,26 @@ class BaselineStore:
             return PolicyResult(suppressed=True, reason=f"baseline:{fp[:8]}")
         return PolicyResult(suppressed=False, reason=None)
 
+    def check_result(self, result: ScanResult) -> PolicyResult:
+        if result.rule_matches:
+            suppressed = all(
+                self.check(result.diff_line, match).suppressed
+                for match in result.rule_matches
+            )
+            return PolicyResult(
+                suppressed=suppressed,
+                reason="baseline:all-rule-matches" if suppressed else None,
+            )
+
+        fp = _fingerprint(
+            result.diff_line.file_path,
+            result.diff_line.line_number,
+            _synthetic_matched_text(result.diff_line),
+        )
+        if fp in self._entries:
+            return PolicyResult(suppressed=True, reason=f"baseline:{fp[:8]}")
+        return PolicyResult(suppressed=False, reason=None)
+
     def add(self, diff_line: DiffLine, rule_match: RuleMatch) -> bool:
         fp = _fingerprint(diff_line.file_path, diff_line.line_number, rule_match.matched_text)
         if fp in self._entries:
@@ -55,10 +80,31 @@ class BaselineStore:
         }
         return True
 
+    def add_result(self, result: ScanResult) -> int:
+        if result.rule_matches:
+            return sum(
+                1 for match in result.rule_matches
+                if self.add(result.diff_line, match)
+            )
+
+        fp = _fingerprint(
+            result.diff_line.file_path,
+            result.diff_line.line_number,
+            _synthetic_matched_text(result.diff_line),
+        )
+        if fp in self._entries:
+            return 0
+        self._entries[fp] = {
+            "fingerprint": fp,
+            "file_path": result.diff_line.file_path,
+            "line_number": result.diff_line.line_number,
+            "rule_id": _SYNTHETIC_RULE_ID,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+        return 1
+
     def add_from_results(self, results: list[ScanResult]) -> int:
         added = 0
         for result in results:
-            for match in result.rule_matches:
-                if self.add(result.diff_line, match):
-                    added += 1
+            added += self.add_result(result)
         return added

@@ -3,7 +3,7 @@ import subprocess
 import click
 import pytest
 
-from keygate.diff.parser import get_staged_diff, parse_diff
+from keygate.diff.parser import get_repo_root, get_staged_diff, parse_diff
 
 SAMPLE_DIFF = """\
 diff --git a/config.py b/config.py
@@ -88,3 +88,17 @@ def test_get_staged_diff_without_git_raises(monkeypatch):
 
     with pytest.raises(click.ClickException, match="git is required but was not found in PATH."):
         get_staged_diff()
+
+
+def test_get_repo_root_uses_git_toplevel(monkeypatch, tmp_path):
+    calls = []
+
+    def fake_run(args, **kwargs):
+        calls.append((args, kwargs))
+        return subprocess.CompletedProcess(args, 0, stdout=str(tmp_path) + "\n")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+
+    assert get_repo_root(tmp_path / "src") == tmp_path
+    assert calls[0][0] == ["git", "rev-parse", "--show-toplevel"]
+    assert calls[0][1]["cwd"] == tmp_path / "src"

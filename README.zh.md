@@ -260,6 +260,7 @@ block_score = 70           # 达到此分数及以上时阻止提交
 [allowlist]
 paths = ["vendor/*"]
 patterns = ["dummy", "example"]
+keywords = ["fixture"]
 
 [baseline]
 path = ".keygate.baseline.json"
