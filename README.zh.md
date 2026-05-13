@@ -3,7 +3,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/keygate.svg)](https://pypi.org/project/keygate/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![PyPI Downloads](https://static.pepy.tech/personalized-badge/keygate?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/keygate)
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/keygate?period=total&units=INTERNATIONAL_SYSTEM&left_color=GREY&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/keygate)
 
 一个 Git pre-commit 钩子，**防止 API 密钥和密码被意外提交**。
 
