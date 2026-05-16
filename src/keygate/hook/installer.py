@@ -62,7 +62,7 @@ def install(repo_root: Path) -> None:
 
     hook_path.write_text(_build_hook_script())
     hook_path.chmod(0o755)
-    click.echo(f"Installed pre-commit hook: {hook_path}")
+    click.echo(f"Pre-commit hook enabled: {hook_path}")
 
 
 def uninstall(repo_root: Path) -> None:
@@ -82,4 +82,4 @@ def uninstall(repo_root: Path) -> None:
         )
 
     hook_path.unlink()
-    click.echo(f"Removed pre-commit hook: {hook_path}")
+    click.echo(f"Pre-commit hook disabled: {hook_path}")
