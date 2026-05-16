@@ -32,7 +32,7 @@ That's it. `keygate` now runs automatically before every `git commit`.
 
 ## Demo
 
-![KeyGate demo](docs/keygate-demo.gif)
+![KeyGate demo](https://raw.githubusercontent.com/kanekoyuichi/keygate/main/docs/keygate-demo.gif)
 
 ---
 

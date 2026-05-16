@@ -175,7 +175,7 @@ def test_main_version_option():
     runner = CliRunner()
     result = runner.invoke(cli.main, ["--version"])
     assert result.exit_code == 0
-    assert "keygate, version 0.3.0" in result.output
+    assert "keygate, version 0.3.1" in result.output
 
 
 def test_install_hook_help_mentions_hooks_path():

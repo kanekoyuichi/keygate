@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "keygate"
-version = "0.3.0"
+version = "0.3.1"
 description = "Fast local pre-commit guardrail that stops secrets before they enter git history"
 readme = "README.md"
 requires-python = ">=3.11"

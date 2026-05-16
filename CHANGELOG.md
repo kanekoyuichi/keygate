@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.1] - 2026-05-16
+
+### Fixes
+
+- Fix demo GIF not displaying on PyPI by using absolute GitHub raw URL instead of relative path
+
 ## [0.3.0] - 2026-05-16
 
 ### Features
