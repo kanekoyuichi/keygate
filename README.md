@@ -5,16 +5,28 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![PyPI Downloads](https://static.pepy.tech/personalized-badge/keygate?period=total&units=INTERNATIONAL_SYSTEM&left_color=GREY&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/keygate)
 
-Stops API keys and passwords from reaching your git history.
+A fast local pre-commit guardrail that stops secrets before they enter git history.
 
 ```bash
 pipx install keygate
 keygate activate
 ```
 
-That's it. keygate now runs automatically before every `git commit`.
+That's it. `keygate` now runs automatically before every `git commit`.
+
+`keygate` scans only staged added lines, runs offline, and blocks likely API keys, passwords, tokens, and private keys before a commit is created. Zero configuration required.
 
 [日本語](https://github.com/kanekoyuichi/keygate/blob/main/README.ja.md) | [中文](https://github.com/kanekoyuichi/keygate/blob/main/README.zh.md)
+
+---
+
+## Why keygate?
+
+- **Fast by design**: scans only `git diff --cached` added lines
+- **Local-first**: no cloud service, no external API calls, no LLM validation
+- **Low-friction**: install once, then keep using `git commit` normally
+- **Practical false-positive handling**: inline ignores, allowlists, and baselines
+- **Agent-friendly**: stable JSON output for AI coding agents and automation
 
 ---
 
@@ -22,9 +34,24 @@ That's it. keygate now runs automatically before every `git commit`.
 
 During development, it's easy to write API keys or passwords directly in code. Once committed with `git commit`, they become permanently embedded in the repository history.
 
-Even if you delete them later, they remain accessible from past commits — and once exposed on GitHub or similar platforms, they can be exploited almost immediately. There are countless cases of AWS key leaks resulting in massive unexpected bills.
+Even if you delete them later, they remain accessible from past commits. Once exposed on GitHub or similar platforms, they can be exploited almost immediately. There are countless cases of AWS key leaks resulting in massive unexpected bills.
 
-keygate **blocks the commit before it happens**. Zero configuration required.
+`keygate` blocks the mistake at the local commit boundary, before the secret becomes part of repository history.
+
+---
+
+## How it works
+
+`keygate` is intentionally narrow. It is not trying to replace full-repository scanners, CI scanners, or cloud security platforms.
+
+Instead, it focuses on the moment right before `git commit` succeeds:
+
+1. Read `git diff --cached`
+2. Extract added lines only
+3. Combine rule-based detection, entropy checks, and context scoring
+4. Block high-confidence secrets, warn on lower-confidence findings
+
+The default threshold blocks findings with a score of 70 or higher and warns for scores from 40 to 69.
 
 ---
 
@@ -36,8 +63,27 @@ keygate **blocks the commit before it happens**. Zero configuration required.
 - Slack Tokens
 - Private Keys (PEM format)
 - JWT Tokens
+- Stripe Secret and Publishable Keys
+- SendGrid API Keys
+- URLs with embedded credentials
 - Long random-looking strings (high-entropy detection)
 - Variable names like `api_key`, `password`, `secret` paired with values
+
+---
+
+## How is this different from Gitleaks or TruffleHog?
+
+`keygate` is not a replacement for full repository, history, CI, or cloud secret scanning.
+
+It is a lightweight local guardrail for the moment right before a commit is created.
+
+| Tool | Best for |
+| --- | --- |
+| keygate | Fast local pre-commit checks on staged changes |
+| Gitleaks | Full repository, history, CI, and configurable rule scanning |
+| TruffleHog | Deep secret discovery and verification workflows |
+
+Use `keygate` when you want a small commit-time check that developers will actually keep enabled.
 
 ---
 
@@ -115,11 +161,23 @@ python -m pip install -U keygate
 
 ---
 
-## Use with Claude Code (plugin)
+## Use with AI coding agents
+
+AI coding agents can generate large diffs quickly. That makes a local commit-time guardrail more useful, not less: copied tokens, `.env` values, and test credentials can slip into staged changes before a human notices.
+
+For agents and automation, use the JSON profile:
+
+```bash
+keygate scan --profile agent
+```
+
+The agent profile emits stable JSON with masked snippets, verdicts, rule IDs, scores, and file locations. Detection logic and policies are identical to the normal CLI scan.
+
+### Claude Code plugin
 
 `keygate` is also available as a [Claude Code](https://docs.claude.com/en/docs/claude-code) plugin. With it installed, Claude can scan staged changes for secrets automatically before you commit, and you can run keygate operations from Claude Code as slash commands.
 
-### Step 1: Install the keygate CLI
+#### Step 1: Install the keygate CLI
 
 The plugin wraps the CLI, so the CLI must be installed first. Pick one:
 
@@ -129,7 +187,7 @@ uv tool install keygate       # if you use uv
 pip install --user keygate    # fallback
 ```
 
-### Step 2: Add the marketplace and install the plugin
+#### Step 2: Add the marketplace and install the plugin
 
 In Claude Code:
 
@@ -138,7 +196,7 @@ In Claude Code:
 /plugin install keygate
 ```
 
-### What you get
+#### What you get
 
 - **Skill `keygate-secret-scan`** — Claude triggers this automatically before commits or when staged changes contain credential-like values. It runs `keygate scan --profile agent`, parses the JSON output, and reports findings with masked snippets.
 - **Slash commands**:
@@ -147,7 +205,7 @@ In Claude Code:
   - `/keygate:baseline-create` — record current findings as accepted
   - `/keygate:baseline-update` — append newly-detected findings
 
-The plugin uses keygate's agent JSON profile (`schema_version: "1"`) internally, so detection logic and policies are identical to the CLI.
+The plugin uses keygate's agent JSON profile (`schema_version: "1"`) internally.
 
 ---
 

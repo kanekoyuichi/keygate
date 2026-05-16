@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.1] - 2026-05-16
+
+### Improvements
+
+- Use neutral "enabled/disabled" wording for hook installation messages
+- Improve README with Why keygate, How it works, and comparison with Gitleaks/TruffleHog sections
+- Update package description to better reflect the tool's focus
+
 ## [0.2.0] - 2026-05-16
 
 ### Features
