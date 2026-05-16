@@ -41,7 +41,10 @@ keygate scan
 keygate scan --format json
 keygate scan --json
 keygate scan --profile agent
+keygate activate
+keygate deactivate
 keygate install-hook
+keygate uninstall-hook
 keygate baseline create
 keygate baseline update
 ```
@@ -189,7 +192,9 @@ path = ".keygate.baseline.json"
 
 ### Git hook の挙動
 
-`keygate install-hook` は、Git が実際に使う hooks ディレクトリへ pre-commit hook をインストールします。
+`keygate activate` は、Git が実際に使う hooks ディレクトリへ pre-commit hook をインストールします。`keygate install-hook` は互換コマンドとして残します。
+
+`keygate deactivate` は keygate が導入した hook を削除します。既存 hook が keygate によるものではない場合は、削除前に確認します。`keygate uninstall-hook` は互換コマンドとして残します。
 
 hook はローカルで動き、次を満たすことを意図しています。
 

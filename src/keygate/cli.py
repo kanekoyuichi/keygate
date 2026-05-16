@@ -8,7 +8,7 @@ from keygate.config import load_config
 from keygate.diff.parser import get_repo_root, get_staged_diff, parse_diff
 from keygate.formatters import json as json_formatter
 from keygate.formatters import text as text_formatter
-from keygate.hook.installer import install
+from keygate.hook.installer import install, uninstall
 from keygate.models import ScanReport, ScanResult, ScanSummary, Status, Verdict
 from keygate.policy import allowlist, baseline, inline
 from keygate.scanner import context, entropy, rules, scoring
@@ -112,11 +112,11 @@ def _resolve_format(format_opt: str | None, json_flag: bool, profile: str | None
         "Examples:\n"
         "  keygate scan\n"
         "  keygate scan --format json\n"
-        "  keygate install-hook\n"
+        "  keygate activate\n"
         "  keygate baseline create"
     ),
 )
-@click.version_option("0.1.12", prog_name="keygate")
+@click.version_option("0.2.0", prog_name="keygate")
 def main() -> None:
     """keygate - Git pre-commit secret scanner."""
 
@@ -177,6 +177,40 @@ def scan(format_opt: str | None, json_flag: bool, profile: str | None) -> None:
 
 
 @main.command(
+    "activate",
+    help=(
+        "Enable KeyGate protection by installing the Git pre-commit hook.\n\n"
+        "The hook is installed into the hooks directory Git actually uses.\n"
+        "If 'core.hooksPath' is configured, keygate installs there instead of "
+        "forcing '.git/hooks'. The generated hook prefers the current Python "
+        "environment and falls back to 'keygate scan' when needed.\n\n"
+        "\b\n"
+        "Example:\n"
+        "  keygate activate"
+    ),
+)
+def activate() -> None:
+    """Enable KeyGate protection for this repository."""
+    install(get_repo_root(Path.cwd()))
+
+
+@main.command(
+    "deactivate",
+    help=(
+        "Disable KeyGate protection by removing the Git pre-commit hook.\n\n"
+        "Only removes hooks installed by keygate. If the hook was not installed "
+        "by keygate, you will be asked to confirm before removal.\n\n"
+        "\b\n"
+        "Example:\n"
+        "  keygate deactivate"
+    ),
+)
+def deactivate() -> None:
+    """Disable KeyGate protection for this repository."""
+    uninstall(get_repo_root(Path.cwd()))
+
+
+@main.command(
     "install-hook",
     help=(
         "Install keygate as a Git pre-commit hook.\n\n"
@@ -192,6 +226,22 @@ def scan(format_opt: str | None, json_flag: bool, profile: str | None) -> None:
 def install_hook() -> None:
     """Install keygate as a pre-commit hook."""
     install(get_repo_root(Path.cwd()))
+
+
+@main.command(
+    "uninstall-hook",
+    help=(
+        "Remove the keygate Git pre-commit hook.\n\n"
+        "Only removes hooks installed by keygate. If the hook was not installed "
+        "by keygate, you will be asked to confirm before removal.\n\n"
+        "\b\n"
+        "Example:\n"
+        "  keygate uninstall-hook"
+    ),
+)
+def uninstall_hook() -> None:
+    """Remove keygate pre-commit hook."""
+    uninstall(get_repo_root(Path.cwd()))
 
 
 @main.group(
