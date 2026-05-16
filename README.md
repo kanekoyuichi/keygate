@@ -30,6 +30,12 @@ That's it. `keygate` now runs automatically before every `git commit`.
 
 ---
 
+## Demo
+
+![keygate demo](docs/keygate-demo.gif)
+
+---
+
 ## Why this matters
 
 During development, it's easy to write API keys or passwords directly in code. Once committed with `git commit`, they become permanently embedded in the repository history.

@@ -16,6 +16,12 @@ keygate activate
 
 ---
 
+## デモ
+
+![keygate demo](docs/keygate-demo.gif)
+
+---
+
 ## なぜ必要か
 
 開発中、コードに API キーやパスワードを直接書いてしまうことがあります。それをそのまま `git commit` すると、リポジトリの履歴に永久に残ってしまいます。

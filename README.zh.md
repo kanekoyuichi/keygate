@@ -16,6 +16,12 @@ keygate activate
 
 ---
 
+## 演示
+
+![keygate demo](docs/keygate-demo.gif)
+
+---
+
 ## 为什么需要它
 
 开发过程中，很容易将 API 密钥或密码直接写入代码。一旦通过 `git commit` 提交，它们就会永久嵌入仓库历史记录中。
