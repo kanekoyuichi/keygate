@@ -51,7 +51,7 @@ pipx install keygate
 ### ② リポジトリで有効化する
 
 ```bash
-cd あなたのプロジェクト
+cd /path/to/your-project  # プロジェクトのフォルダに移動
 keygate activate
 ```
 
