@@ -1,4 +1,4 @@
-# keygate
+# KeyGate
 
 [![PyPI version](https://img.shields.io/pypi/v/keygate.svg)](https://pypi.org/project/keygate/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -18,7 +18,7 @@ keygate activate
 
 ## デモ
 
-![keygate demo](docs/keygate-demo.gif)
+![KeyGate demo](docs/keygate-demo.gif)
 
 ---
 
@@ -33,13 +33,13 @@ OPENAI_API_KEY = "sk-..."  # 実際のキー
 
 `git commit` した瞬間、その値はリポジトリの**履歴に永久に残ります**。後で削除しても、過去のコミットを辿れば取り出せます。GitHub に push した場合、数秒以内に bot にスキャンされて悪用されることもあります。
 
-keygate はこの「うっかりコミット」を、コミットが確定する前の瞬間に止めます。
+KeyGate はこの「うっかりコミット」を、コミットが確定する前の瞬間に止めます。
 
 ---
 
 ## インストール
 
-### ① keygate 本体を入れる
+### ① KeyGate 本体を入れる
 
 ```bash
 pipx install keygate
@@ -56,7 +56,7 @@ keygate activate
 ```
 
 > **何が起きるの？**  
-> Git の「コミット直前に自動で走るスクリプト」（pre-commit フック）として keygate を登録します。以降の `git commit` で自動的に動くようになります。
+> Git の「コミット直前に自動で走るスクリプト」（pre-commit フック）として KeyGate を登録します。以降の `git commit` で自動的に動くようになります。
 
 **以上で完了です。** あとは普段通りに開発するだけです。
 
@@ -118,7 +118,7 @@ To ignore:
 
 ## 誤検知が出たときは
 
-keygate は安全側に倒す設計のため、まれに本物でない文字列を検知することがあります。その場合の対処法です。
+KeyGate は安全側に倒す設計のため、まれに本物でない文字列を検知することがあります。その場合の対処法です。
 
 ### 方法1：その行だけ無視する（一番手軽）
 
@@ -177,7 +177,7 @@ git commit --no-verify
 
 `keygate.toml` と `.keygate.baseline.json` を Git にコミットして共有してください。各メンバーが `keygate activate` を実行すれば、共有設定がそのまま使われます。
 
-**Q. keygate 自体を更新するには？**
+**Q. KeyGate 自体を更新するには？**
 
 ```bash
 pipx upgrade keygate

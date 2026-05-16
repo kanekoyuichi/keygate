@@ -1,4 +1,4 @@
-# keygate
+# KeyGate
 
 [![PyPI version](https://img.shields.io/pypi/v/keygate.svg)](https://pypi.org/project/keygate/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -18,7 +18,7 @@ keygate activate
 
 ## 演示
 
-![keygate demo](docs/keygate-demo.gif)
+![KeyGate demo](docs/keygate-demo.gif)
 
 ---
 
@@ -28,7 +28,7 @@ keygate activate
 
 即使事后删除，过去的提交中仍然可以访问到这些信息——一旦在 GitHub 等平台上公开，几乎会立即被滥用。因 AWS 密钥泄露而产生巨额账单的案例不胜枚举。
 
-keygate **在提交发生之前自动拦截**。无需任何配置即可开始使用。
+KeyGate **在提交发生之前自动拦截**。无需任何配置即可开始使用。
 
 ---
 
@@ -65,7 +65,7 @@ cd path/to/your-project
 keygate activate
 ```
 
-将 keygate 安装为 Git pre-commit 钩子。如果仓库配置了 `core.hooksPath`，keygate 会安装到该目录，而不是固定写入 `.git/hooks`。
+将 KeyGate 安装为 Git pre-commit 钩子。如果仓库配置了 `core.hooksPath`，KeyGate 会安装到该目录，而不是固定写入 `.git/hooks`。
 
 生成的 hook 会优先使用当前 Python 环境执行 `python -m keygate.cli scan`，只有在该方式不可用时才回退到 `keygate scan`。这样在 hook 执行时 PATH 受限的环境里也更可靠。
 
@@ -210,7 +210,7 @@ paths = ["vendor/*", "third_party/*"]  # 忽略非自有代码
 patterns = ["dummy", "example"]         # 忽略包含这些词的行
 ```
 
-> 注意：将 `tests/*` 整体加入白名单，会导致 keygate 忽略测试代码中混入的真实密钥。测试中的误报请使用方式一（内联忽略）或方式三（baseline）处理。
+> 注意：将 `tests/*` 整体加入白名单，会导致 KeyGate 忽略测试代码中混入的真实密钥。测试中的误报请使用方式一（内联忽略）或方式三（baseline）处理。
 
 ### 方式三：Baseline — 将现有检测结果注册为忽略
 
@@ -296,7 +296,7 @@ A. 使用 `git commit --no-verify` 可跳过单次提交的所有钩子。如需
 
 A. 将 `keygate.toml` 和 `.keygate.baseline.json` 提交到 Git 共享。每位成员需单独执行 `keygate activate`。
 
-**Q. 如何升级 keygate？**
+**Q. 如何升级 KeyGate？**
 
 A. 如果是通过 `pipx` 安装的，运行 `pipx upgrade keygate`。如果是通过 `pip` 安装的，运行 `python -m pip install -U keygate`。
 

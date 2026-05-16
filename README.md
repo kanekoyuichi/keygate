@@ -1,4 +1,4 @@
-# keygate
+# KeyGate
 
 [![PyPI version](https://img.shields.io/pypi/v/keygate.svg)](https://pypi.org/project/keygate/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -20,7 +20,7 @@ That's it. `keygate` now runs automatically before every `git commit`.
 
 ---
 
-## Why keygate?
+## Why KeyGate?
 
 - **Fast by design**: scans only `git diff --cached` added lines
 - **Local-first**: no cloud service, no external API calls, no LLM validation
@@ -32,7 +32,7 @@ That's it. `keygate` now runs automatically before every `git commit`.
 
 ## Demo
 
-![keygate demo](docs/keygate-demo.gif)
+![KeyGate demo](docs/keygate-demo.gif)
 
 ---
 
@@ -85,7 +85,7 @@ It is a lightweight local guardrail for the moment right before a commit is crea
 
 | Tool | Best for |
 | --- | --- |
-| keygate | Fast local pre-commit checks on staged changes |
+| KeyGate | Fast local pre-commit checks on staged changes |
 | Gitleaks | Full repository, history, CI, and configurable rule scanning |
 | TruffleHog | Deep secret discovery and verification workflows |
 
@@ -113,7 +113,7 @@ cd path/to/your-project
 keygate activate
 ```
 
-This installs keygate as a Git pre-commit hook. If your repo has `core.hooksPath` configured, keygate installs there instead of forcing `.git/hooks`.
+This installs KeyGate as a Git pre-commit hook. If your repo has `core.hooksPath` configured, KeyGate installs there instead of forcing `.git/hooks`.
 
 The generated hook prefers the current Python environment (`python -m keygate.cli scan`) and falls back to `keygate scan`, which makes it more reliable on systems where the hook PATH is limited.
 
@@ -211,7 +211,7 @@ In Claude Code:
   - `/keygate:baseline-create` — record current findings as accepted
   - `/keygate:baseline-update` — append newly-detected findings
 
-The plugin uses keygate's agent JSON profile (`schema_version: "1"`) internally.
+The plugin uses KeyGate's agent JSON profile (`schema_version: "1"`) internally.
 
 ---
 
@@ -357,7 +357,7 @@ A. Use `git commit --no-verify` to skip all hooks for a single commit. To remove
 
 A. Commit `keygate.toml` and `.keygate.baseline.json` to Git. Each team member needs to run `keygate activate` individually.
 
-**Q. How do I update keygate?**
+**Q. How do I update KeyGate?**
 
 A. If you installed it with `pipx`, run `pipx upgrade keygate`. If you installed it with `pip`, run `python -m pip install -U keygate`.
 
