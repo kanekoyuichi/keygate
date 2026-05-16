@@ -67,7 +67,7 @@ keygate activate
 
 将 KeyGate 安装为 Git pre-commit 钩子。如果仓库配置了 `core.hooksPath`，KeyGate 会安装到该目录，而不是固定写入 `.git/hooks`。
 
-> **Windows 用户**：需要安装 [Git for Windows](https://gitforwindows.org/)。钩子通过 Git for Windows 内置的 MSYS2 Shell 执行。如果你是通过 `pip install`（而非 `pipx`）安装的 `keygate`，请在运行 `keygate activate` 前先激活对应的 virtualenv（Python 隔离环境）——否则钩子执行时会找不到 `keygate` 命令。使用 `pipx` 安装则无需此操作。WSL 同样支持。
+> **Windows 用户**：需要安装 [Git for Windows](https://gitforwindows.org/)。钩子通过 Git for Windows 内置的 MSYS2 Shell 执行。如果你是通过 `pip install`（而非 `pipx`）安装的 `keygate`，请在你使用的 Shell 中激活 virtualenv 后再运行 `keygate activate`。使用 `pipx` 安装则无需此操作。WSL 同样支持。
 
 生成的 hook 会优先使用当前 Python 环境执行 `python -m keygate.cli scan`，只有在该方式不可用时才回退到 `keygate scan`。这样在 hook 执行时 PATH 受限的环境里也更可靠。
 
