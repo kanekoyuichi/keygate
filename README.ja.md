@@ -5,7 +5,7 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![PyPI Downloads](https://static.pepy.tech/personalized-badge/keygate?period=total&units=INTERNATIONAL_SYSTEM&left_color=GREY&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/keygate)
 
-APIキーやパスワードが git でコミットされる前に止める、pre-commit フックです。
+うっかり API キーやパスワードを Git にコミットしてしまう事故を、自動で防ぐツールです。
 
 ```bash
 pipx install keygate
