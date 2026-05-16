@@ -4,7 +4,7 @@ import sys
 import click
 import pytest
 
-from keygate.hook.installer import install
+from keygate.hook.installer import install, uninstall
 
 
 @pytest.fixture
@@ -62,3 +62,41 @@ def test_install_without_git_raises(tmp_path, monkeypatch):
 
     with pytest.raises(click.ClickException, match="git is required but was not found in PATH."):
         install(tmp_path)
+
+
+def test_uninstall_removes_hook(git_repo):
+    install(git_repo)
+    hook = git_repo / ".git" / "hooks" / "pre-commit"
+    assert hook.exists()
+    uninstall(git_repo)
+    assert not hook.exists()
+
+
+def test_uninstall_no_hook_does_not_raise(git_repo):
+    uninstall(git_repo)
+
+
+def test_uninstall_non_keygate_hook_requires_confirm(git_repo, monkeypatch):
+    hook = git_repo / ".git" / "hooks" / "pre-commit"
+    hook.parent.mkdir(exist_ok=True)
+    hook.write_text("#!/bin/sh\necho hello\n")
+    hook.chmod(0o755)
+
+    monkeypatch.setattr(click, "confirm", lambda *a, **kw: (_ for _ in ()).throw(click.Abort()))
+    with pytest.raises(click.Abort):
+        uninstall(git_repo)
+    assert hook.exists()
+
+
+def test_uninstall_respects_core_hooks_path(git_repo):
+    hooks_dir = git_repo / ".githooks"
+    subprocess.run(
+        ["git", "-C", str(git_repo), "config", "core.hooksPath", str(hooks_dir)],
+        check=True,
+        capture_output=True,
+    )
+    install(git_repo)
+    hook = hooks_dir / "pre-commit"
+    assert hook.exists()
+    uninstall(git_repo)
+    assert not hook.exists()

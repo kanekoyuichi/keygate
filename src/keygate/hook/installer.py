@@ -42,10 +42,15 @@ exit 1
 """
 
 
-def install(repo_root: Path) -> None:
+def _resolve_hooks_dir(repo_root: Path) -> Path:
     hooks_dir = _git_path(repo_root, "hooks")
     if not hooks_dir.is_absolute():
         hooks_dir = repo_root / hooks_dir
+    return hooks_dir
+
+
+def install(repo_root: Path) -> None:
+    hooks_dir = _resolve_hooks_dir(repo_root)
     hooks_dir.mkdir(exist_ok=True)
     hook_path = hooks_dir / "pre-commit"
 
@@ -58,3 +63,23 @@ def install(repo_root: Path) -> None:
     hook_path.write_text(_build_hook_script())
     hook_path.chmod(0o755)
     click.echo(f"Installed pre-commit hook: {hook_path}")
+
+
+def uninstall(repo_root: Path) -> None:
+    hooks_dir = _resolve_hooks_dir(repo_root)
+    hook_path = hooks_dir / "pre-commit"
+
+    try:
+        content = hook_path.read_text()
+    except FileNotFoundError:
+        click.echo("No pre-commit hook found.")
+        return
+
+    if "# Installed by keygate" not in content:
+        click.confirm(
+            f"{hook_path} was not installed by keygate. Remove anyway?",
+            abort=True,
+        )
+
+    hook_path.unlink()
+    click.echo(f"Removed pre-commit hook: {hook_path}")

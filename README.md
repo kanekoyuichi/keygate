@@ -5,19 +5,26 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![PyPI Downloads](https://static.pepy.tech/personalized-badge/keygate?period=total&units=INTERNATIONAL_SYSTEM&left_color=GREY&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/keygate)
 
-A Git pre-commit hook that **prevents accidental commits of API keys and passwords**.
+Stops API keys and passwords from reaching your git history.
+
+```bash
+pipx install keygate
+keygate activate
+```
+
+That's it. keygate now runs automatically before every `git commit`.
 
 [日本語](https://github.com/kanekoyuichi/keygate/blob/main/README.ja.md) | [中文](https://github.com/kanekoyuichi/keygate/blob/main/README.zh.md)
 
 ---
 
-## Why you need this
+## Why this matters
 
 During development, it's easy to write API keys or passwords directly in code. Once committed with `git commit`, they become permanently embedded in the repository history.
 
 Even if you delete them later, they remain accessible from past commits — and once exposed on GitHub or similar platforms, they can be exploited almost immediately. There are countless cases of AWS key leaks resulting in massive unexpected bills.
 
-`keygate` **automatically checks before every commit** and blocks anything that looks dangerous.
+keygate **blocks the commit before it happens**. Zero configuration required.
 
 ---
 
@@ -47,16 +54,14 @@ pipx install keygate
 > If you don't have `pipx`, install it with `pip install pipx`.
 > Using `pipx` makes the `keygate` command available from any project directory.
 
-### Step 2: Enable the hook
-
-A "hook" is a script Git runs automatically at certain points. Running `keygate install-hook` makes `keygate` run automatically on every `git commit`.
+### Step 2: Activate
 
 ```bash
 cd path/to/your-project
-keygate install-hook
+keygate activate
 ```
 
-`install-hook` writes to the hooks directory Git actually uses. If your repo has `core.hooksPath` configured, keygate installs the hook there instead of forcing `.git/hooks`.
+This installs keygate as a Git pre-commit hook. If your repo has `core.hooksPath` configured, keygate installs there instead of forcing `.git/hooks`.
 
 The generated hook prefers the current Python environment (`python -m keygate.cli scan`) and falls back to `keygate scan`, which makes it more reliable on systems where the hook PATH is limited.
 
@@ -248,7 +253,7 @@ git add .keygate.baseline.json
 git commit -m "Add keygate baseline"
 ```
 
-New team members only need to run `pipx install keygate` and `keygate install-hook` — the shared baseline is picked up automatically.
+New team members only need to run `pipx install keygate` and `keygate activate` — the shared baseline is picked up automatically.
 
 ---
 
@@ -282,11 +287,11 @@ A. Revoke (rotate) the key immediately. Removing it from Git history is not enou
 
 **Q. How do I temporarily disable the hook?**
 
-A. Use `git commit --no-verify` to skip all hooks including keygate. Not recommended for regular use.
+A. Use `git commit --no-verify` to skip all hooks for a single commit. To remove the hook entirely, run `keygate deactivate`.
 
 **Q. How do we share this across a team?**
 
-A. Commit `keygate.toml` and `.keygate.baseline.json` to Git. Each team member needs to run `keygate install-hook` individually.
+A. Commit `keygate.toml` and `.keygate.baseline.json` to Git. Each team member needs to run `keygate activate` individually.
 
 **Q. How do I update keygate?**
 

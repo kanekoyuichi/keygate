@@ -5,17 +5,24 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![PyPI Downloads](https://static.pepy.tech/personalized-badge/keygate?period=total&units=INTERNATIONAL_SYSTEM&left_color=GREY&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/keygate)
 
-**APIキーやパスワードを誤って Git にコミットしてしまう事故を防ぐツール**です。
+APIキーやパスワードが git 履歴に入る前に止める、pre-commit フックです。
+
+```bash
+pipx install keygate
+keygate activate
+```
+
+これだけ。以降は `git commit` のたびに自動でチェックが走ります。
 
 ---
 
-## なぜ必要なのか
+## なぜ必要か
 
 開発中、コードに API キーやパスワードを直接書いてしまうことがあります。それをそのまま `git commit` すると、リポジトリの履歴に永久に残ってしまいます。
 
 たとえ後で削除しても、過去のコミットからは取り出せるため、GitHub などに公開されるとすぐに悪用されます。AWS のキーが漏れて高額請求された事例も多くあります。
 
-`keygate` は **コミット直前に自動でチェック** し、危険なものが含まれていれば止めてくれます。
+keygate は **コミット前に自動でブロック** します。設定不要で使い始められます。
 
 ---
 
@@ -36,7 +43,7 @@
 
 ### ステップ1: インストール
 
-`keygate` は Python 製のコマンドラインツールです。`pipx` というツールでインストールするのが一番簡単です。
+`keygate` は Python 製のコマンドラインツールです。`pipx` でインストールするのが一番簡単です。
 
 ```bash
 pipx install keygate
@@ -45,16 +52,14 @@ pipx install keygate
 > `pipx` がない場合は `pip install pipx` でインストールできます。
 > `pipx` を使うと、どのプロジェクトのフォルダからでも `keygate` コマンドが使えるようになります。
 
-### ステップ2: フックを有効化する
-
-「フック」とは、Git が特定のタイミングで自動的に実行してくれる仕組みのことです。`keygate install-hook` を実行すると、`git commit` のたびに `keygate` が自動で動くようになります。
+### ステップ2: 有効化する
 
 ```bash
 cd path/to/your-project   # 自分のプロジェクトに移動
-keygate install-hook
+keygate activate
 ```
 
-`install-hook` は Git が実際に使う hooks ディレクトリへ書き込みます。`core.hooksPath` を設定しているリポジトリでも、`.git/hooks` に固定せず正しい配置先を使います。
+Git の pre-commit フックとしてインストールします。`core.hooksPath` を設定しているリポジトリでも、`.git/hooks` に固定せず正しい配置先を使います。
 
 生成される hook は、まず現在の Python 実行環境で `python -m keygate.cli scan` を実行し、それが使えない場合だけ `keygate scan` にフォールバックします。hook 実行時の `PATH` が制限されている環境でも壊れにくくするためです。
 
@@ -245,7 +250,7 @@ git add .keygate.baseline.json
 git commit -m "Add keygate baseline"
 ```
 
-新しくプロジェクトに参加した人は、`pipx install keygate` と `keygate install-hook` を実行するだけで、共有された baseline がそのまま使われます。
+新しくプロジェクトに参加した人は、`pipx install keygate` と `keygate activate` を実行するだけで、共有された baseline がそのまま使われます。
 
 ---
 
@@ -279,11 +284,11 @@ A. すぐにそのキーを無効化（rotate）してください。Git の履�
 
 **Q. フックを一時的に無効化したい**
 
-A. `git commit --no-verify` で `keygate` を含むすべてのフックをスキップできます（ただし非推奨です）。
+A. `git commit --no-verify` で1回だけスキップできます。フックを完全に取り除く場合は `keygate deactivate` を実行してください。
 
 **Q. チームで共有するには？**
 
-A. `keygate.toml` と `.keygate.baseline.json` を Git にコミットして共有してください。各メンバーは `keygate install-hook` をそれぞれ実行する必要があります。
+A. `keygate.toml` と `.keygate.baseline.json` を Git にコミットして共有してください。各メンバーは `keygate activate` をそれぞれ実行する必要があります。
 
 **Q. keygate 自体を更新するには？**
 

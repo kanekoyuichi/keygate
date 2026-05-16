@@ -175,7 +175,7 @@ def test_main_version_option():
     runner = CliRunner()
     result = runner.invoke(cli.main, ["--version"])
     assert result.exit_code == 0
-    assert "keygate, version 0.1.12" in result.output
+    assert "keygate, version 0.2.0" in result.output
 
 
 def test_install_hook_help_mentions_hooks_path():
@@ -184,6 +184,66 @@ def test_install_hook_help_mentions_hooks_path():
     assert result.exit_code == 0
     assert "core.hooksPath" in result.output
     assert "keygate install-hook" in result.output
+
+
+def test_activate_help_mentions_hooks_path():
+    runner = CliRunner()
+    result = runner.invoke(cli.main, ["activate", "--help"])
+    assert result.exit_code == 0
+    assert "core.hooksPath" in result.output
+    assert "keygate activate" in result.output
+
+
+def test_deactivate_help_mentions_safe_removal():
+    runner = CliRunner()
+    result = runner.invoke(cli.main, ["deactivate", "--help"])
+    assert result.exit_code == 0
+    assert "Only removes hooks installed by keygate" in result.output
+    assert "keygate deactivate" in result.output
+
+
+def test_uninstall_hook_help_mentions_safe_removal():
+    runner = CliRunner()
+    result = runner.invoke(cli.main, ["uninstall-hook", "--help"])
+    assert result.exit_code == 0
+    assert "Only removes hooks installed by keygate" in result.output
+    assert "keygate uninstall-hook" in result.output
+
+
+def test_activate_calls_install(tmp_path, monkeypatch):
+    calls = []
+    runner = CliRunner()
+    monkeypatch.setattr(cli, "get_repo_root", lambda _cwd: tmp_path)
+    monkeypatch.setattr(cli, "install", lambda repo_root: calls.append(repo_root))
+
+    result = runner.invoke(cli.main, ["activate"])
+
+    assert result.exit_code == 0
+    assert calls == [tmp_path]
+
+
+def test_deactivate_calls_uninstall(tmp_path, monkeypatch):
+    calls = []
+    runner = CliRunner()
+    monkeypatch.setattr(cli, "get_repo_root", lambda _cwd: tmp_path)
+    monkeypatch.setattr(cli, "uninstall", lambda repo_root: calls.append(repo_root))
+
+    result = runner.invoke(cli.main, ["deactivate"])
+
+    assert result.exit_code == 0
+    assert calls == [tmp_path]
+
+
+def test_uninstall_hook_calls_uninstall(tmp_path, monkeypatch):
+    calls = []
+    runner = CliRunner()
+    monkeypatch.setattr(cli, "get_repo_root", lambda _cwd: tmp_path)
+    monkeypatch.setattr(cli, "uninstall", lambda repo_root: calls.append(repo_root))
+
+    result = runner.invoke(cli.main, ["uninstall-hook"])
+
+    assert result.exit_code == 0
+    assert calls == [tmp_path]
 
 
 def test_baseline_create_help_mentions_existing_entries():

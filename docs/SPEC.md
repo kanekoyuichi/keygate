@@ -41,7 +41,10 @@ keygate scan
 keygate scan --format json
 keygate scan --json
 keygate scan --profile agent
+keygate activate
+keygate deactivate
 keygate install-hook
+keygate uninstall-hook
 keygate baseline create
 keygate baseline update
 ```
@@ -189,7 +192,9 @@ When you run `keygate scan`, or when the installed Git hook runs it during `git 
 
 ### Git hook behavior
 
-`keygate install-hook` installs a pre-commit hook into the hooks directory Git actually uses.
+`keygate activate` installs a pre-commit hook into the hooks directory Git actually uses. `keygate install-hook` is kept as a compatibility alias.
+
+`keygate deactivate` removes hooks installed by keygate. If the existing hook was not installed by keygate, it asks for confirmation before removal. `keygate uninstall-hook` is kept as a compatibility alias.
 
 The hook runs locally and is intended to be:
 

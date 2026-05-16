@@ -5,7 +5,14 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![PyPI Downloads](https://static.pepy.tech/personalized-badge/keygate?period=total&units=INTERNATIONAL_SYSTEM&left_color=GREY&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/keygate)
 
-一个 Git pre-commit 钩子，**防止 API 密钥和密码被意外提交**。
+在 API 密钥和密码进入 git 历史之前将其拦截的 pre-commit 钩子。
+
+```bash
+pipx install keygate
+keygate activate
+```
+
+就这两条命令。此后每次 `git commit` 都会自动检查。
 
 ---
 
@@ -15,7 +22,7 @@
 
 即使事后删除，过去的提交中仍然可以访问到这些信息——一旦在 GitHub 等平台上公开，几乎会立即被滥用。因 AWS 密钥泄露而产生巨额账单的案例不胜枚举。
 
-`keygate` 在**每次提交前自动检查**，发现危险内容时阻止提交。
+keygate **在提交发生之前自动拦截**。无需任何配置即可开始使用。
 
 ---
 
@@ -45,16 +52,14 @@ pipx install keygate
 > 如果没有 `pipx`，可以通过 `pip install pipx` 安装。
 > 使用 `pipx` 安装后，`keygate` 命令可在任意项目目录中使用。
 
-### 第二步：启用钩子
-
-"钩子"是 Git 在特定时机自动执行的脚本。运行 `keygate install-hook` 后，每次 `git commit` 时 `keygate` 都会自动运行。
+### 第二步：激活
 
 ```bash
 cd path/to/your-project
-keygate install-hook
+keygate activate
 ```
 
-`install-hook` 会写入 Git 实际使用的 hooks 目录。如果仓库配置了 `core.hooksPath`，keygate 会安装到该目录，而不是固定写入 `.git/hooks`。
+将 keygate 安装为 Git pre-commit 钩子。如果仓库配置了 `core.hooksPath`，keygate 会安装到该目录，而不是固定写入 `.git/hooks`。
 
 生成的 hook 会优先使用当前 Python 环境执行 `python -m keygate.cli scan`，只有在该方式不可用时才回退到 `keygate scan`。这样在 hook 执行时 PATH 受限的环境里也更可靠。
 
@@ -245,7 +250,7 @@ git add .keygate.baseline.json
 git commit -m "Add keygate baseline"
 ```
 
-新成员只需执行 `pipx install keygate` 和 `keygate install-hook`，即可自动使用共享的 baseline。
+新成员只需执行 `pipx install keygate` 和 `keygate activate`，即可自动使用共享的 baseline。
 
 ---
 
@@ -279,11 +284,11 @@ A. 立即撤销（rotate）该密钥。仅从 Git 历史中删除是不够的。
 
 **Q. 如何临时禁用钩子？**
 
-A. 使用 `git commit --no-verify` 可跳过包括 keygate 在内的所有钩子。不建议日常使用。
+A. 使用 `git commit --no-verify` 可跳过单次提交的所有钩子。如需完全移除钩子，运行 `keygate deactivate`。
 
 **Q. 如何在团队中共享配置？**
 
-A. 将 `keygate.toml` 和 `.keygate.baseline.json` 提交到 Git 共享。每位成员需单独执行 `keygate install-hook`。
+A. 将 `keygate.toml` 和 `.keygate.baseline.json` 提交到 Git 共享。每位成员需单独执行 `keygate activate`。
 
 **Q. 如何升级 keygate？**
 

@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0] - 2026-05-16
+
+### Features
+
+- Add `keygate activate` command as the primary user-facing way to install the Git pre-commit hook
+- Add `keygate deactivate` command to remove the installed hook
+- Add `keygate uninstall-hook` command as the explicit technical alias for deactivate
+- Keep `keygate install-hook` as a backward-compatible alias for activate
+
+### Improvements
+
+- Refactor hook path resolution into a shared `_resolve_hooks_dir()` helper
+- Use `try/except FileNotFoundError` in `uninstall()` to eliminate TOCTOU race
+- Update README (en/ja/zh) to use `keygate activate` as the primary onboarding command
+- Update `docs/SPEC.md` and `docs/SPEC.ja.md` to document the new commands
+
 ## [0.1.12] - 2026-04-30
 
 ### Fixes
