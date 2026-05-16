@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0] - 2026-05-16
+
+### Features
+
+- Add Windows support for `keygate activate`: the generated hook script now converts the Python executable path to MSYS2 POSIX format (`/c/Python311/python.exe`), making it compatible with Git for Windows
+
+### Docs
+
+- Rebrand display name to KeyGate across all README files
+- Add Windows installation notes (Git for Windows required) to README.md, README.ja.md, README.zh.md
+
 ## [0.2.1] - 2026-05-16
 
 ### Improvements

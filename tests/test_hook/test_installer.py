@@ -4,7 +4,7 @@ import sys
 import click
 import pytest
 
-from keygate.hook.installer import install, uninstall
+from keygate.hook.installer import _build_hook_script, _to_posix_path, install, uninstall
 
 
 @pytest.fixture
@@ -20,6 +20,7 @@ def test_install_creates_hook(git_repo):
     assert "keygate scan" in hook.read_text()
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="chmod is a no-op on Windows")
 def test_hook_is_executable(git_repo):
     install(git_repo)
     hook = git_repo / ".git" / "hooks" / "pre-commit"
@@ -45,7 +46,8 @@ def test_hook_uses_current_python_environment(git_repo):
     install(git_repo)
     hook = git_repo / ".git" / "hooks" / "pre-commit"
     content = hook.read_text()
-    assert f"{sys.executable} -m keygate.cli scan" in content
+    expected_python = _to_posix_path(sys.executable)
+    assert f"{expected_python} -m keygate.cli scan" in content
     assert "command -v keygate" in content
 
 
@@ -100,3 +102,26 @@ def test_uninstall_respects_core_hooks_path(git_repo):
     assert hook.exists()
     uninstall(git_repo)
     assert not hook.exists()
+
+
+def test_to_posix_path_passthrough_on_non_windows(monkeypatch):
+    monkeypatch.setattr(sys, "platform", "linux")
+    assert _to_posix_path("/usr/bin/python3") == "/usr/bin/python3"
+
+
+def test_to_posix_path_converts_drive_path(monkeypatch):
+    monkeypatch.setattr(sys, "platform", "win32")
+    assert _to_posix_path("C:\\Python311\\python.exe") == "/c/Python311/python.exe"
+
+
+def test_to_posix_path_handles_spaces(monkeypatch):
+    monkeypatch.setattr(sys, "platform", "win32")
+    assert _to_posix_path("C:\\Program Files\\Python311\\python.exe") == "/c/Program Files/Python311/python.exe"
+
+
+def test_build_hook_script_uses_posix_path_on_windows(monkeypatch):
+    monkeypatch.setattr(sys, "platform", "win32")
+    monkeypatch.setattr(sys, "executable", "C:\\Python311\\python.exe")
+    script = _build_hook_script()
+    assert "/c/Python311/python.exe" in script
+    assert "C:\\" not in script

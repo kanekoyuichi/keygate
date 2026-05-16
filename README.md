@@ -115,6 +115,8 @@ keygate activate
 
 This installs KeyGate as a Git pre-commit hook. If your repo has `core.hooksPath` configured, KeyGate installs there instead of forcing `.git/hooks`.
 
+> **Windows users**: [Git for Windows](https://gitforwindows.org/) is required. The hook runs through the MSYS2 shell bundled with Git for Windows. If you installed `keygate` inside a virtualenv (using `pip install` instead of `pipx`), activate that virtualenv first — otherwise the `keygate` command won't be found when the hook runs. If you used `pipx`, no extra steps are needed. WSL also works.
+
 The generated hook prefers the current Python environment (`python -m keygate.cli scan`) and falls back to `keygate scan`, which makes it more reliable on systems where the hook PATH is limited.
 
 That's all the setup you need.

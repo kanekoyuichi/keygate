@@ -23,8 +23,18 @@ def _git_path(repo_root: Path, path_name: str) -> Path:
     return Path(result.stdout.strip())
 
 
+def _to_posix_path(path: str) -> str:
+    """Windows パスを MSYS2 POSIX 形式に変換する。非 Windows では素通し。"""
+    if sys.platform != "win32":
+        return path
+    posix = path.replace("\\", "/")
+    if len(posix) >= 2 and posix[1] == ":":
+        return "/" + posix[0].lower() + posix[2:]
+    return posix
+
+
 def _build_hook_script() -> str:
-    python_executable = shlex.quote(sys.executable)
+    python_executable = shlex.quote(_to_posix_path(sys.executable))
     return f"""\
 #!/bin/sh
 # Installed by keygate
