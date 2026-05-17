@@ -202,3 +202,36 @@ def test_breakdown_includes_context_parts():
     assert result.score_breakdown["assignment"] == 15
     assert result.score_breakdown["path"] == 15
     assert result.score_breakdown["entropy"] == 20
+
+
+# ---------- PII cap ----------
+
+def make_pii_match(score=50):
+    return RuleMatch(
+        rule_id="pii-email",
+        matched_text="user@example.com",
+        score=score,
+        description="Email address detected",
+        remediation=["Remove the email"],
+        policy="pii",
+    )
+
+
+def test_pii_alone_is_warn():
+    result = aggregate(make_line(), [make_pii_match()], 0, ctx())
+    assert result.verdict == Verdict.WARN
+    assert result.total_score == 50
+
+
+def test_pii_capped_at_warn_even_with_high_context():
+    signals = ctx(keyword_score=25, keyword_tier="high", path_score=20, assignment_score=15)
+    result = aggregate(make_line(), [make_pii_match()], 20, signals)
+    assert result.verdict == Verdict.WARN
+    assert result.total_score == 40
+    assert "cap:pii" in result.score_breakdown
+
+
+def test_pii_cap_breakdown_value_is_warn_score():
+    signals = ctx(keyword_score=25, keyword_tier="high", assignment_score=15)
+    result = aggregate(make_line(), [make_pii_match()], 20, signals)
+    assert result.score_breakdown["cap:pii"] == 40
