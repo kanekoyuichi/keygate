@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.0] - 2026-05-17
+
+### Features
+
+- Expand secret detection coverage with new rules for Azure SAS tokens, Hugging Face tokens, Docker Hub tokens, Vercel tokens, Sentry DSNs, Datadog keys, Discord tokens and webhooks, Telegram bot tokens, Twilio auth tokens, and `Authorization` headers.
+- Extend context path scoring for `.npmrc`, `.pypirc`, `kubeconfig`, `terraform.tfvars`, and Docker config files.
+
+### Improvements
+
+- Add positive/negative fixture corpus coverage for rule-level regression testing.
+- Update README and user specifications to document the expanded detection coverage and PII warning behavior.
+
 ## [0.4.0] - 2026-05-17
 
 ### Features
