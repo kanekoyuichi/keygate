@@ -225,6 +225,83 @@ RULES: list[Rule] = [
             "Use managed identities or Azure Key Vault instead",
         ],
     ),
+    # --- PII rules (always WARN, never BLOCK) ---
+    Rule(
+        rule_id="pii-email",
+        pattern=re.compile(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"),
+        score=50,
+        policy="pii",
+        description="Email address detected",
+        remediation=[
+            "Remove or anonymize the email address",
+            "Use placeholder values in non-production code",
+        ],
+    ),
+    Rule(
+        rule_id="pii-phone-jp",
+        pattern=re.compile(
+            r"(?:(?:0[5-9]0|0[1-9]\d{0,3})[-\s]\d{1,4}[-\s]\d{4}|\+81[-\s]?\d{1,4}[-\s]\d{1,4}[-\s]\d{4})"
+        ),
+        score=50,
+        policy="pii",
+        description="Japanese phone number detected",
+        remediation=[
+            "Remove or anonymize the phone number",
+            "Use placeholder values in non-production code",
+        ],
+    ),
+    Rule(
+        rule_id="pii-credit-card",
+        pattern=re.compile(
+            r"\b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13}"
+            r"|6(?:011|5[0-9]{2})[0-9]{12}|3(?:0[0-5]|[68][0-9])[0-9]{11})\b"
+        ),
+        score=50,
+        policy="pii",
+        description="Credit card number detected",
+        remediation=[
+            "Remove the credit card number immediately",
+            "Rotate or cancel the card if it was a real number",
+            "Never store raw card numbers — use a payment tokenization service",
+        ],
+    ),
+    Rule(
+        rule_id="pii-ssn",
+        pattern=re.compile(
+            r"\b(?!000|666|9\d{2})\d{3}-(?!00)\d{2}-(?!0000)\d{4}\b"
+        ),
+        score=50,
+        policy="pii",
+        description="US Social Security Number detected",
+        remediation=[
+            "Remove the SSN from the code",
+            "Use anonymized or tokenized identifiers instead",
+        ],
+    ),
+    Rule(
+        rule_id="pii-iban",
+        pattern=re.compile(r"\b[A-Z]{2}\d{2}[A-Z0-9]{4,30}\b"),
+        score=50,
+        policy="pii",
+        description="IBAN (International Bank Account Number) detected",
+        remediation=[
+            "Remove the IBAN from the code",
+            "Use anonymized identifiers in non-production code",
+        ],
+    ),
+    Rule(
+        rule_id="pii-uk-nin",
+        pattern=re.compile(
+            r"\b[A-CEGHJ-PR-TW-Z][A-CEGHJ-NPR-TW-Z]\d{6}[A-D]\b"
+        ),
+        score=50,
+        policy="pii",
+        description="UK National Insurance Number detected",
+        remediation=[
+            "Remove the NI Number from the code",
+            "Use anonymized identifiers in non-production code",
+        ],
+    ),
 ]
 
 

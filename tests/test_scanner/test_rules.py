@@ -58,7 +58,7 @@ def test_multiple_matches_for_same_rule_are_returned():
 
 def test_all_rules_have_policy():
     for rule in RULES:
-        assert rule.policy in {"must_block", "public_exposable"}
+        assert rule.policy in {"must_block", "public_exposable", "pii"}
 
 
 def test_stripe_publishable_key_is_public_exposable():
@@ -147,7 +147,8 @@ def test_url_credentials_masked_is_downgraded(masked):
 ])
 def test_no_false_positive(content):
     matches = scan_line(content)
-    assert matches == [], f"Unexpected match on: {content} → {[m.rule_id for m in matches]}"
+    secret_matches = [m for m in matches if m.policy != "pii"]
+    assert secret_matches == [], f"Unexpected match on: {content} → {[m.rule_id for m in secret_matches]}"
 
 
 # ---------- Specific rule-level negatives ----------
@@ -167,3 +168,49 @@ def test_url_without_credentials_not_matched():
 
 def test_url_with_port_only_not_matched():
     assert scan_line("URL = 'https://example.com:443/path'") == []
+
+
+# ---------- PII rules ----------
+
+@pytest.mark.parametrize("content,rule_id", [
+    ('email = "user@example.com"', "pii-email"),
+    ('contact = "yamada@company.co.jp"', "pii-email"),
+    ('tel = "03-1234-5678"', "pii-phone-jp"),
+    ('mobile = "090-1234-5678"', "pii-phone-jp"),
+    ('intl = "+81-3-1234-5678"', "pii-phone-jp"),
+    ('card = "4111111111111111"', "pii-credit-card"),
+    ('card = "5500005555555559"', "pii-credit-card"),
+    ('card = "378282246310005"', "pii-credit-card"),
+    ('ssn = "123-45-6789"', "pii-ssn"),
+    ('iban = "GB29NWBK60161331926819"', "pii-iban"),
+    ('nin = "AB123456C"', "pii-uk-nin"),
+])
+def test_pii_rule_matches(content, rule_id):
+    matches = scan_line(content)
+    assert any(m.rule_id == rule_id for m in matches), \
+        f"Expected {rule_id} to match in: {content}"
+
+
+def test_pii_rules_have_pii_policy():
+    pii_rules = [r for r in RULES if r.rule_id.startswith("pii-")]
+    assert len(pii_rules) == 6
+    for rule in pii_rules:
+        assert rule.policy == "pii", f"{rule.rule_id} should have policy='pii'"
+
+
+@pytest.mark.parametrize("content", [
+    # Phone without separators (too many FP)
+    '"09012345678"',
+    # SSN with invalid area (000)
+    '"000-45-6789"',
+    # SSN with invalid area (666)
+    '"666-45-6789"',
+    # SSN with invalid area (900+)
+    '"900-45-6789"',
+    # Too-short IBAN
+    '"GB29NW"',
+])
+def test_pii_no_false_positive(content):
+    pii_matches = [m for m in scan_line(content) if m.rule_id.startswith("pii-")]
+    assert pii_matches == [], \
+        f"Unexpected PII match on: {content} → {[m.rule_id for m in pii_matches]}"

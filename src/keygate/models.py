@@ -4,7 +4,7 @@ import enum
 from dataclasses import dataclass, field
 from typing import Literal
 
-Policy = Literal["must_block", "public_exposable"]
+Policy = Literal["must_block", "public_exposable", "pii"]
 Status = Literal["pass", "warn", "block"]
 
 
