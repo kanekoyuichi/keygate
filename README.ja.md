@@ -107,11 +107,19 @@ To ignore:
 
 - AWS アクセスキー（`AKIA...`）
 - OpenAI API キー（`sk-...`）
+- Anthropic API キー（`sk-ant-...`）
+- Google API キー（`AIza...`）
 - GitHub トークン（`ghp_...`）
+- GitLab personal access token（`glpat-...`）
 - Slack トークン（`xoxb-...`）
 - 秘密鍵（PEM 形式）
 - JWT トークン
 - Stripe キー
+- SendGrid API キー
+- npm アクセストークン（`npm_...`）
+- PyPI API トークン（`pypi-...`）
+- Django シークレットキー（`django-insecure-...`）
+- Azure Storage アカウントキー
 - URL に埋め込まれた認証情報（`postgres://user:***@host` など）
 - ランダムに見える長い文字列（高エントロピー検知）
 - `api_key`, `password`, `secret` などの変数名 + 値の組み合わせ

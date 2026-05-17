@@ -148,6 +148,83 @@ RULES: list[Rule] = [
             "Load credentials from environment variables or a secret manager",
         ],
     ),
+    Rule(
+        rule_id="anthropic-api-key",
+        pattern=re.compile(r"sk-ant-[A-Za-z0-9_-]{40,}"),
+        score=90,
+        description="Anthropic API Key detected",
+        remediation=[
+            "Remove the key from the code",
+            "Rotate the Anthropic API key in the console",
+            "Use environment variables instead",
+        ],
+    ),
+    Rule(
+        rule_id="google-api-key",
+        pattern=re.compile(r"AIza[0-9A-Za-z_-]{35}"),
+        score=80,
+        description="Google API Key detected",
+        remediation=[
+            "Remove the key from the code",
+            "Restrict or rotate the key in Google Cloud Console",
+            "Use environment variables instead",
+        ],
+    ),
+    Rule(
+        rule_id="gitlab-token",
+        pattern=re.compile(r"glpat-[0-9A-Za-z_-]{20}"),
+        score=85,
+        description="GitLab Personal Access Token detected",
+        remediation=[
+            "Remove the token from the code",
+            "Revoke the token on GitLab",
+            "Use environment variables instead",
+        ],
+    ),
+    Rule(
+        rule_id="npm-token",
+        pattern=re.compile(r"npm_[A-Za-z0-9]{36}"),
+        score=85,
+        description="npm Access Token detected",
+        remediation=[
+            "Remove the token from the code",
+            "Revoke the token on npmjs.com",
+            "Use environment variables instead",
+        ],
+    ),
+    Rule(
+        rule_id="pypi-token",
+        pattern=re.compile(r"pypi-[A-Za-z0-9._-]{50,}"),
+        score=90,
+        description="PyPI API Token detected",
+        remediation=[
+            "Remove the token from the code",
+            "Revoke the token on pypi.org",
+            "Use environment variables or trusted publishing instead",
+        ],
+    ),
+    Rule(
+        rule_id="django-secret-key",
+        pattern=re.compile(r"django-insecure-[a-z0-9!@#$%^&*()\-_=+]{50,}"),
+        score=85,
+        description="Django Secret Key detected",
+        remediation=[
+            "Remove the secret key from the code",
+            "Generate a new secret key and store it in environment variables",
+            "Use python-decouple or django-environ to load secrets",
+        ],
+    ),
+    Rule(
+        rule_id="azure-connection-string",
+        pattern=re.compile(r"AccountKey=[A-Za-z0-9+/]{80,}={0,2}"),
+        score=90,
+        description="Azure Storage Account Key detected",
+        remediation=[
+            "Remove the connection string from the code",
+            "Rotate the storage account key in Azure Portal",
+            "Use managed identities or Azure Key Vault instead",
+        ],
+    ),
 ]
 
 

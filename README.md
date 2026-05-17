@@ -65,12 +65,19 @@ The default threshold blocks findings with a score of 70 or higher and warns for
 
 - AWS Access Keys
 - OpenAI API Keys
+- Anthropic API Keys
+- Google API Keys
 - GitHub Tokens
+- GitLab Personal Access Tokens
 - Slack Tokens
 - Private Keys (PEM format)
 - JWT Tokens
 - Stripe Secret and Publishable Keys
 - SendGrid API Keys
+- npm Access Tokens
+- PyPI API Tokens
+- Django Secret Keys
+- Azure Storage Account Keys
 - URLs with embedded credentials
 - Long random-looking strings (high-entropy detection)
 - Variable names like `api_key`, `password`, `secret` paired with values
