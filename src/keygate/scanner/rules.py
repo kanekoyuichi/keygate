@@ -285,7 +285,13 @@ RULES: list[Rule] = [
     ),
     Rule(
         rule_id="pii-iban",
-        pattern=re.compile(r"\b[A-Z]{2}\d{2}[A-Z0-9]{11,30}\b"),
+        pattern=re.compile(
+            r"\b(?:AD|AE|AL|AT|AZ|BA|BE|BG|BH|BR|BY|CH|CR|CY|CZ|DE|DK|DO"
+            r"|EE|EG|ES|FI|FO|FR|GB|GE|GI|GL|GR|GT|HR|HU|IE|IL|IQ|IS|IT"
+            r"|JO|KW|KZ|LB|LC|LI|LT|LU|LV|MC|MD|ME|MK|MR|MT|MU|NL|NO|PK"
+            r"|PL|PS|PT|QA|RO|RS|SA|SC|SE|SI|SK|SM|ST|SV|TL|TN|TR|UA|VA|VG|XK)"
+            r"\d{2}[A-Z0-9]{11,30}\b"
+        ),
         score=50,
         policy="pii",
         description="IBAN (International Bank Account Number) detected",

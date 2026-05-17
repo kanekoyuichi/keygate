@@ -220,6 +220,9 @@ def test_pii_rules_have_pii_policy():
     '"900-45-6789"',
     # Too-short IBAN
     '"GB29NW"',
+    # Non-IBAN country code uppercase identifier
+    '"AB12CD34EF56GH78IJ90"',
+    '"ZZ99XXXXXXXXXXXX"',
 ])
 def test_pii_no_false_positive(content):
     pii_matches = [m for m in scan_line(content) if m.rule_id.startswith("pii-")]
