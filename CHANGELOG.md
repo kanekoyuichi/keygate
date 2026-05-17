@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0] - 2026-05-17
+
+### Features
+
+- Add PII detection (WARN-only, never BLOCK unless non-PII signals alone reach the block threshold):
+  - `pii-email`: email addresses
+  - `pii-phone-jp`: Japanese phone numbers — separator formats (`03-1234-5678`), no-separator mobile (`09012345678`/`08012345678`/`07012345678`/`05012345678`), parenthesized formats (`(03)1234-5678`, `03(1234)5678`), international format (`+81-...`), optional extension suffix (`ext.`/`内線`)
+  - `pii-credit-card`: Visa, Mastercard, Amex, Discover, Diners, JCB — with or without separators
+  - `pii-ssn`: US Social Security Numbers
+  - `pii-iban`: IBANs (compact and space-grouped, case-insensitive)
+  - `pii-uk-nin`: UK National Insurance Numbers (compact `AB123456C` and spaced `AB 12 34 56 C`)
+- Add 7 new secret detection rules: `anthropic-api-key`, `google-api-key`, `gitlab-token`, `npm-token`, `pypi-token`, `django-secret-key`, `azure-connection-string`
+
+### Fixes
+
+- Fix `parse_diff` incorrectly attributing lines to the wrong file when a deleted file (`+++ /dev/null`) follows an added file in the same diff
+- Fix `pii-phone-jp` partial match on over-long strings (e.g. `03-1234-56789`) by adding trailing `\b`
+- Fix `pii-phone-jp` false match on substrings of spaced IBANs by adding leading `\b`
+
+### Improvements
+
+- Expand test coverage: `_run_scan` end-to-end pipeline, `load_config`, `parse_diff` deleted-file and git-args assertions
+
 ## [0.3.1] - 2026-05-16
 
 ### Fixes
