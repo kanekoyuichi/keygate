@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import re
+import base64
+import binascii
 from dataclasses import dataclass, field
 
 from keygate.models import Policy, RuleMatch
@@ -36,6 +38,10 @@ _MASK_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
+_BASIC_AUTH_PATTERN = re.compile(
+    r"\bAuthorization\s*:\s*Basic\s+(?P<value>[A-Za-z0-9+/]{12,}={0,2})(?![A-Za-z0-9+/=])",
+    re.IGNORECASE,
+)
 
 RULES: list[Rule] = [
     Rule(
@@ -225,6 +231,163 @@ RULES: list[Rule] = [
             "Use managed identities or Azure Key Vault instead",
         ],
     ),
+    Rule(
+        rule_id="azure-sas-token",
+        pattern=re.compile(
+            r"(?:\?|&)"
+            r"(?:"
+            r"sv=\d{4}-\d{2}-\d{2}[^\"'\s]*\bsig=[A-Za-z0-9%+/=]{20,}"
+            r"|sig=[A-Za-z0-9%+/=]{20,}[^\"'\s]*\bsv=\d{4}-\d{2}-\d{2}"
+            r")",
+            re.IGNORECASE,
+        ),
+        score=85,
+        description="Azure SAS token detected",
+        remediation=[
+            "Remove the SAS token from the code",
+            "Revoke or regenerate the shared access signature",
+            "Use managed identities or short-lived credentials instead",
+        ],
+    ),
+    Rule(
+        rule_id="huggingface-token",
+        pattern=re.compile(r"\bhf_[A-Za-z0-9]{34,}\b"),
+        score=85,
+        description="Hugging Face token detected",
+        remediation=[
+            "Remove the token from the code",
+            "Revoke the token in Hugging Face settings",
+            "Use environment variables instead",
+        ],
+    ),
+    Rule(
+        rule_id="dockerhub-token",
+        pattern=re.compile(r"\bdckr_pat_[A-Za-z0-9_-]{20,}\b"),
+        score=85,
+        description="Docker Hub access token detected",
+        remediation=[
+            "Remove the token from the code",
+            "Revoke the token in Docker Hub",
+            "Use environment variables or credential helpers instead",
+        ],
+    ),
+    Rule(
+        rule_id="vercel-token",
+        pattern=re.compile(
+            r"\bvercel[_-]?token\s*[:=]\s*[\"']?[A-Za-z0-9]{24,}\b",
+            re.IGNORECASE,
+        ),
+        score=80,
+        description="Vercel token detected",
+        remediation=[
+            "Remove the token from the code",
+            "Revoke the token in Vercel account settings",
+            "Use environment variables instead",
+        ],
+    ),
+    Rule(
+        rule_id="sentry-dsn",
+        pattern=re.compile(
+            r"https://[A-Fa-f0-9]{32}@[A-Za-z0-9.-]+/[0-9]+"
+        ),
+        score=40,
+        policy="public_exposable",
+        description="Sentry DSN detected",
+        remediation=[
+            "Review whether this DSN should be public",
+            "Use environment variables if this is server-side configuration",
+        ],
+    ),
+    Rule(
+        rule_id="datadog-api-key",
+        pattern=re.compile(
+            r"\b(?:datadog|dd)[_-]?(?:api|app)[_-]?key\s*[:=]\s*[\"']?[A-Fa-f0-9]{32,40}\b",
+            re.IGNORECASE,
+        ),
+        score=85,
+        description="Datadog API or application key detected",
+        remediation=[
+            "Remove the key from the code",
+            "Revoke or rotate the key in Datadog",
+            "Use environment variables instead",
+        ],
+    ),
+    Rule(
+        rule_id="discord-token",
+        pattern=re.compile(
+            r"\b(?:mfa\.[A-Za-z0-9_-]{20,}|[MN][A-Za-z0-9]{23}\.[A-Za-z0-9_-]{6}\.[A-Za-z0-9_-]{27,})\b"
+        ),
+        score=85,
+        description="Discord token detected",
+        remediation=[
+            "Remove the token from the code",
+            "Reset the Discord bot token",
+            "Use environment variables instead",
+        ],
+    ),
+    Rule(
+        rule_id="discord-webhook-url",
+        pattern=re.compile(
+            r"https://discord(?:app)?\.com/api/webhooks/[0-9]{17,20}/[A-Za-z0-9_-]{60,}"
+        ),
+        score=90,
+        description="Discord webhook URL detected",
+        remediation=[
+            "Remove the webhook URL from the code",
+            "Delete or rotate the Discord webhook",
+            "Use environment variables instead",
+        ],
+    ),
+    Rule(
+        rule_id="telegram-bot-token",
+        pattern=re.compile(r"\b[0-9]{8,10}:[A-Za-z0-9_-]{35}\b"),
+        score=85,
+        description="Telegram bot token detected",
+        remediation=[
+            "Remove the token from the code",
+            "Revoke the bot token with BotFather",
+            "Use environment variables instead",
+        ],
+    ),
+    Rule(
+        rule_id="twilio-auth-token",
+        pattern=re.compile(
+            r"\btwilio[_-]?auth[_-]?token\s*[:=]\s*[\"']?[A-Fa-f0-9]{32}\b",
+            re.IGNORECASE,
+        ),
+        score=85,
+        description="Twilio auth token detected",
+        remediation=[
+            "Remove the token from the code",
+            "Rotate the Twilio auth token",
+            "Use environment variables instead",
+        ],
+    ),
+    Rule(
+        rule_id="authorization-bearer",
+        pattern=re.compile(
+            r"\bAuthorization\s*:\s*Bearer\s+[A-Za-z0-9._~+/=-]{20,}\b",
+            re.IGNORECASE,
+        ),
+        score=70,
+        description="Authorization Bearer token detected",
+        remediation=[
+            "Remove the bearer token from the code",
+            "Revoke or rotate the exposed credential",
+            "Load authorization headers from environment variables instead",
+        ],
+    ),
+    Rule(
+        rule_id="authorization-basic",
+        pattern=_BASIC_AUTH_PATTERN,
+        score=70,
+        description="Authorization Basic credentials detected",
+        remediation=[
+            "Remove the Basic authorization header from the code",
+            "Rotate the exposed password or token",
+            "Load credentials from environment variables instead",
+        ],
+    ),
     # --- PII rules ---
     # PII alone is capped to WARN. If non-PII signals (entropy, context, path)
     # are strong enough to reach block_score without the PII rule, the result
@@ -351,12 +514,39 @@ def _match_url_credentials(rule: Rule, m: re.Match[str]) -> RuleMatch:
     )
 
 
+def _match_basic_auth(rule: Rule, m: re.Match[str]) -> RuleMatch | None:
+    value = m.group("value")
+    try:
+        decoded = base64.b64decode(value, validate=True).decode("utf-8")
+    except (binascii.Error, UnicodeDecodeError):
+        return None
+
+    if ":" not in decoded:
+        return None
+    user, password = decoded.split(":", 1)
+    if not user or not password or _MASK_PATTERN.match(password):
+        return None
+
+    return RuleMatch(
+        rule_id=rule.rule_id,
+        matched_text=m.group(0),
+        score=rule.score,
+        description=rule.description,
+        remediation=rule.remediation,
+        policy=rule.policy,
+    )
+
+
 def scan_line(content: str) -> list[RuleMatch]:
     matches: list[RuleMatch] = []
     for rule in RULES:
         for m in rule.pattern.finditer(content):
             if rule.rule_id == "url-credentials":
                 matches.append(_match_url_credentials(rule, m))
+            elif rule.rule_id == "authorization-basic":
+                basic_match = _match_basic_auth(rule, m)
+                if basic_match is not None:
+                    matches.append(basic_match)
             else:
                 matches.append(RuleMatch(
                     rule_id=rule.rule_id,

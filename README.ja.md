@@ -120,7 +120,11 @@ To ignore:
 - PyPI API トークン（`pypi-...`）
 - Django シークレットキー（`django-insecure-...`）
 - Azure Storage アカウントキー
+- Azure SAS トークン
+- Hugging Face、Docker Hub、Vercel、Datadog、Discord、Telegram、Twilio のトークン
+- Sentry DSN
 - URL に埋め込まれた認証情報（`postgres://user:***@host` など）
+- `Authorization: Bearer ...` とデコード可能な `Authorization: Basic ...` ヘッダー
 - 個人情報らしい値（メールアドレス、日本の電話番号（`03-1234-5678` や `090-1234-5678` のような区切り付き形式、`090`/`080`/`070`/`050` で始まるセパレータなし携帯番号、`(03)1234-5678` や `03(1234)5678` のような括弧付き形式、`+81-...` の国際形式、`ext. 123` や `内線 456` などの内線番号付き形式に対応）、クレジットカード番号（JCB を含む）、米国 SSN、IBAN（コンパクト形式・スペース区切り形式、大文字小文字を区別しない）、英国 National Insurance Number（コンパクト形式 `AB123456C` およびスペース区切り形式 `AB 12 34 56 C`））
 - ランダムに見える長い文字列（高エントロピー検知）
 - `api_key`, `password`, `secret` などの変数名 + 値の組み合わせ

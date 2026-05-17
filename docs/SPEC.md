@@ -113,7 +113,17 @@ path = ".keygate.baseline.json"
 - PyPI API tokens
 - Django secret keys
 - Azure Storage account keys
+- Azure SAS tokens
+- Hugging Face tokens
+- Docker Hub access tokens
+- Vercel tokens
+- Sentry DSNs
+- Datadog API and application keys
+- Discord tokens and webhook URLs
+- Telegram bot tokens
+- Twilio auth tokens
 - URLs with embedded credentials such as `postgres://user:password@host` <!-- keygate: ignore reason="documentation example" -->
+- Authorization headers (`Bearer` and decodable `Basic` credentials)
 - PII-like values:
   email addresses, Japanese phone numbers, credit card numbers including JCB,
   US SSNs, IBANs, and UK National Insurance numbers
@@ -137,6 +147,7 @@ There are three user-visible policy classes:
 Examples of `public_exposable` behavior:
 
 - Stripe publishable keys
+- Sentry DSNs
 - masked URL credentials such as `postgres://user:***@host/db` <!-- keygate: ignore reason="documentation example" -->
 
 ### Entropy detection
@@ -147,7 +158,7 @@ High entropy alone is not enough in many cases. It becomes more useful when pair
 
 - variable names like `api_key` or `password`
 - assignment syntax such as `NAME=...`
-- sensitive file paths such as `.env`
+- sensitive file paths such as `.env`, `.npmrc`, `.pypirc`, `kubeconfig`, `terraform.tfvars`, and Docker config files
 
 ### Context signals
 

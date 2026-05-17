@@ -29,6 +29,17 @@ _MID_KEYWORDS = re.compile(
 )
 
 _VERY_SENSITIVE_PATH = re.compile(r"(?:^|/)\.env(?:\.|$)", re.IGNORECASE)
+_SECRET_TOOL_PATH = re.compile(
+    r"(?:"
+    r"(?:^|/)\.npmrc$"
+    r"|(?:^|/)\.pypirc$"
+    r"|(?:^|/)kubeconfig$"
+    r"|(?:^|/)terraform\.tfvars$"
+    r"|(?:^|/)\.docker/config\.json$"
+    r"|(?:^|/)docker/config\.json$"
+    r")",
+    re.IGNORECASE,
+)
 _SENSITIVE_PATH = re.compile(r"(?:settings|credentials?|secrets?|config)", re.IGNORECASE)
 _CONFIG_EXT = re.compile(r"\.(?:ya?ml|toml|ini|properties)$", re.IGNORECASE)
 
@@ -57,7 +68,7 @@ def _keyword(content: str) -> tuple[int, str]:
 
 
 def _path(file_path: str) -> int:
-    if _VERY_SENSITIVE_PATH.search(file_path):
+    if _VERY_SENSITIVE_PATH.search(file_path) or _SECRET_TOOL_PATH.search(file_path):
         return 20
     if _SENSITIVE_PATH.search(file_path):
         return 15

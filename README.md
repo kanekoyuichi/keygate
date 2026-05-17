@@ -78,7 +78,11 @@ The default threshold blocks findings with a score of 70 or higher and warns for
 - PyPI API Tokens
 - Django Secret Keys
 - Azure Storage Account Keys
+- Azure SAS Tokens
+- Hugging Face, Docker Hub, Vercel, Datadog, Discord, Telegram, and Twilio tokens
+- Sentry DSNs
 - URLs with embedded credentials
+- `Authorization: Bearer ...` and decodable `Authorization: Basic ...` headers
 - Personal information patterns:
   email addresses,
   Japanese phone numbers (separator formats like `03-1234-5678` and `090-1234-5678`,

@@ -49,7 +49,11 @@ KeyGate **在提交发生之前自动拦截**。无需任何配置即可开始�
 - PyPI API 令牌
 - Django Secret Key
 - Azure Storage 账户密钥
+- Azure SAS Token
+- Hugging Face、Docker Hub、Vercel、Datadog、Discord、Telegram、Twilio Token
+- Sentry DSN
 - URL 中嵌入的凭据（例如 `postgres://user:password@host`） <!-- # keygate: ignore reason="documentation example" -->
+- `Authorization: Bearer ...` 以及可解码的 `Authorization: Basic ...` 请求头
 - 疑似个人信息：电子邮件地址、日本电话号码（支持 `03-1234-5678` 和 `090-1234-5678` 等带分隔符格式、以 `090`/`080`/`070`/`050` 开头的无分隔符手机号、`(03)1234-5678` 和 `03(1234)5678` 等括号格式、`+81-...` 国际格式，以及 `ext. 123` 或 `内線 456` 等分机号后缀）、信用卡号（含 JCB）、美国 SSN、IBAN（紧凑格式和空格分组格式，不区分大小写）、英国 National Insurance Number（紧凑格式 `AB123456C` 和空格格式 `AB 12 34 56 C`）
 - 看起来随机的长字符串（高熵检测）
 - 变量名如 `api_key`、`password`、`secret` 与其对应值的组合
