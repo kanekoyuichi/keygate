@@ -16,6 +16,15 @@ from keygate.scanner.rules import RULES, scan_line
     ("DB = 'postgres://admin:s3cr3t@db.example.com/prod'", "url-credentials"),
     ("URL = 'https://user:pass@example.com'", "url-credentials"),
     ("REDIS = 'redis://user:xy9z@cache:6379'", "url-credentials"),
+    ("key = sk-ant-api03-" + "A" * 95, "anthropic-api-key"),  # keygate: ignore reason="test fixture"
+    ("key = AIza" + "A" * 35, "google-api-key"),  # keygate: ignore reason="test fixture"
+    ("token = glpat-" + "A" * 20, "gitlab-token"),  # keygate: ignore reason="test fixture"
+    ("token = npm_" + "A" * 36, "npm-token"),  # keygate: ignore reason="test fixture"
+    ("token = pypi-" + "A" * 50, "pypi-token"),  # keygate: ignore reason="test fixture"
+    ("SECRET_KEY = 'django-insecure-" + "a" * 50 + "'", "django-secret-key"),  # keygate: ignore reason="test fixture"
+    ("TWILIO_SID = 'AC" + "a" * 32 + "'", "twilio-credential"),  # keygate: ignore reason="test fixture"
+    ('email = "myservice@my-project.iam.gserviceaccount.com"', "gcp-service-account"),  # keygate: ignore reason="test fixture"
+    ("conn = 'DefaultEndpointsProtocol=https;AccountName=myaccount;AccountKey=" + "A" * 86 + "==" + "'", "azure-connection-string"),  # keygate: ignore reason="test fixture"
 ])
 def test_rule_matches(content, rule_id):
     matches = scan_line(content)
@@ -131,6 +140,17 @@ def test_url_credentials_masked_is_downgraded(masked):
     '"sk-short"',
     # Git SHA
     '"a1b2c3d4e5f6789012345678901234567890abcd"',
+    # Short npm-like string (too short)
+    '"npm_short"',
+    # Short pypi-like string (too short)
+    '"pypi-tooshort"',
+    # Regular email (not GCP service account)
+    '"user@example.com"',
+    '"admin@company.co.jp"',
+    # Twilio-like but wrong prefix
+    '"BC" + "a" * 32',
+    # Azure AccountKey without enough chars
+    '"AccountKey=tooshort"',
 ])
 def test_no_false_positive(content):
     matches = scan_line(content)
