@@ -79,8 +79,21 @@ The default threshold blocks findings with a score of 70 or higher and warns for
 - Django Secret Keys
 - Azure Storage Account Keys
 - URLs with embedded credentials
+- Personal information patterns:
+  email addresses,
+  Japanese phone numbers (separator formats like `03-1234-5678` and `090-1234-5678`,
+  no-separator mobile numbers starting with `090`/`080`/`070`/`050`,
+  parenthesized formats like `(03)1234-5678` and `03(1234)5678`,
+  international format `+81-...`, and optional extension suffixes like `ext. 123` or `内線 456`),
+  credit card numbers including JCB,
+  US SSNs, IBANs (compact and space-grouped formats, case-insensitive),
+  and UK National Insurance numbers (compact `AB123456C` and spaced `AB 12 34 56 C`)
 - Long random-looking strings (high-entropy detection)
 - Variable names like `api_key`, `password`, `secret` paired with values
+
+PII-only findings are reported as warnings, not commit-blocking errors. If the
+same line also contains strong non-PII secret signals that reach the block
+threshold on their own, the finding may still block the commit.
 
 ---
 

@@ -178,6 +178,17 @@ def test_url_with_port_only_not_matched():
     ('tel = "03-1234-5678"', "pii-phone-jp"),  # keygate: ignore reason="test fixture"
     ('mobile = "090-1234-5678"', "pii-phone-jp"),  # keygate: ignore reason="test fixture"
     ('intl = "+81-3-1234-5678"', "pii-phone-jp"),  # keygate: ignore reason="test fixture"
+    ('mobile = "09012345678"', "pii-phone-jp"),  # keygate: ignore reason="test fixture"
+    ('mobile = "08012345678"', "pii-phone-jp"),  # keygate: ignore reason="test fixture"
+    ('mobile = "07012345678"', "pii-phone-jp"),  # keygate: ignore reason="test fixture"
+    ('mobile = "05012345678"', "pii-phone-jp"),  # keygate: ignore reason="test fixture"
+    ('tel = "(03)1234-5678"', "pii-phone-jp"),  # keygate: ignore reason="test fixture"
+    ('tel = "03(1234)5678"', "pii-phone-jp"),  # keygate: ignore reason="test fixture"
+    ('tel = "03-1234-5678 ext123"', "pii-phone-jp"),  # keygate: ignore reason="test fixture"
+    ('tel = "03-1234-5678 ext. 123"', "pii-phone-jp"),  # keygate: ignore reason="test fixture"
+    ('tel = "03-1234-5678ext123"', "pii-phone-jp"),  # keygate: ignore reason="test fixture"
+    ('tel = "03-1234-5678 x123"', "pii-phone-jp"),  # keygate: ignore reason="test fixture"
+    ('tel = "03-1234-5678 内線123"', "pii-phone-jp"),  # keygate: ignore reason="test fixture"
     ('card = "4111111111111111"', "pii-credit-card"),  # keygate: ignore reason="test fixture"
     ('card = "4111-1111-1111-1111"', "pii-credit-card"),  # keygate: ignore reason="test fixture"
     ('card = "4111 1111 1111 1111"', "pii-credit-card"),  # keygate: ignore reason="test fixture"
@@ -185,9 +196,14 @@ def test_url_with_port_only_not_matched():
     ('card = "5500-0055-5555-5559"', "pii-credit-card"),  # keygate: ignore reason="test fixture"
     ('card = "378282246310005"', "pii-credit-card"),  # keygate: ignore reason="test fixture"
     ('card = "3782-822463-10005"', "pii-credit-card"),  # keygate: ignore reason="test fixture"
+    ('card = "3530111333300000"', "pii-credit-card"),  # keygate: ignore reason="test fixture" JCB
+    ('card = "3530-1113-3330-0000"', "pii-credit-card"),  # keygate: ignore reason="test fixture" JCB
     ('ssn = "123-45-6789"', "pii-ssn"),  # keygate: ignore reason="test fixture"
     ('iban = "GB29NWBK60161331926819"', "pii-iban"),  # keygate: ignore reason="test fixture"
+    ('iban = "GB29 NWBK 6016 1331 9268 19"', "pii-iban"),  # keygate: ignore reason="test fixture"
+    ('iban = "gb29nwbk60161331926819"', "pii-iban"),  # keygate: ignore reason="test fixture" lowercase
     ('nin = "AB123456C"', "pii-uk-nin"),  # keygate: ignore reason="test fixture"
+    ('nin = "AB 12 34 56 C"', "pii-uk-nin"),  # keygate: ignore reason="test fixture" spaced
 ])
 def test_pii_rule_matches(content, rule_id):
     matches = scan_line(content)
@@ -202,6 +218,13 @@ def test_uk_nin_not_detected_as_iban():
     assert "pii-iban" not in rule_ids
 
 
+def test_spaced_iban_not_detected_as_phone_jp():
+    matches = scan_line('iban = "GB29 NWBK 6016 1331 9268 19"')  # keygate: ignore reason="test fixture"
+    rule_ids = [m.rule_id for m in matches]
+    assert "pii-iban" in rule_ids
+    assert "pii-phone-jp" not in rule_ids
+
+
 def test_pii_rules_have_pii_policy():
     pii_rules = [r for r in RULES if r.rule_id.startswith("pii-")]
     assert len(pii_rules) == 6
@@ -210,8 +233,12 @@ def test_pii_rules_have_pii_policy():
 
 
 @pytest.mark.parametrize("content", [
-    # Phone without separators (too many FP)
-    '"09012345678"',
+    # Phone with extra trailing digit (partial-match guard)
+    '"03-1234-56789"',
+    '"090-1234-56789"',
+    '"090123456789"',  # 12 digits (too long for no-sep mobile)
+    # Phone with trailing letter (partial-match guard)
+    '"03-1234-5678abc"',
     # SSN with invalid area (000)
     '"000-45-6789"',
     # SSN with invalid area (666)

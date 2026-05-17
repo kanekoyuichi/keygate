@@ -90,6 +90,69 @@ def test_get_staged_diff_without_git_raises(monkeypatch):
         get_staged_diff()
 
 
+ADDED_THEN_DELETED_DIFF = """\
+diff --git a/new.py b/new.py
+new file mode 100644
+--- /dev/null
++++ b/new.py
+@@ -0,0 +1,1 @@
++added_line = 1
+diff --git a/old.py b/old.py
+deleted file mode 100644
+--- a/old.py
++++ /dev/null
+@@ -1,1 +0,0 @@
+-removed_line = 1
+"""
+
+
+def test_deleted_file_after_added_produces_no_diff_lines():
+    lines = parse_diff(ADDED_THEN_DELETED_DIFF)
+    assert len(lines) == 1
+    assert lines[0].file_path == "new.py"
+    assert lines[0].content == "added_line = 1"
+
+
+def test_deleted_file_alone_produces_no_diff_lines():
+    diff = """\
+diff --git a/old.py b/old.py
+deleted file mode 100644
+--- a/old.py
++++ /dev/null
+@@ -1,1 +0,0 @@
+-removed_line = 1
+"""
+    assert parse_diff(diff) == []
+
+
+def test_added_line_starting_with_double_plus_is_parsed():
+    diff = """\
+diff --git a/app.py b/app.py
+--- a/app.py
++++ b/app.py
+@@ -1 +1,2 @@
++++counter
+"""
+    lines = parse_diff(diff)
+    assert len(lines) == 1
+    assert lines[0].file_path == "app.py"
+    assert lines[0].content == "++counter"
+
+
+def test_get_staged_diff_uses_cached_unified_zero(monkeypatch):
+    calls = []
+
+    def fake_run(args, **kwargs):
+        calls.append(args)
+        return subprocess.CompletedProcess(args, 0, stdout="")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    get_staged_diff()
+
+    assert calls[0] == ["git", "rev-parse", "--is-inside-work-tree"]
+    assert calls[1] == ["git", "diff", "--cached", "--unified=0"]
+
+
 def test_get_repo_root_uses_git_toplevel(monkeypatch, tmp_path):
     calls = []
 

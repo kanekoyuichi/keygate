@@ -114,6 +114,9 @@ path = ".keygate.baseline.json"
 - Django secret keys
 - Azure Storage account keys
 - URLs with embedded credentials such as `postgres://user:password@host` <!-- keygate: ignore reason="documentation example" -->
+- PII-like values:
+  email addresses, Japanese phone numbers, credit card numbers including JCB,
+  US SSNs, IBANs, and UK National Insurance numbers
 
 Each rule has:
 
@@ -123,12 +126,13 @@ Each rule has:
 
 ### Policies
 
-There are two user-visible policy classes:
+There are three user-visible policy classes:
 
 | Policy | Meaning |
 | --- | --- |
 | `must_block` | Sensitive by default. A strong match usually reaches block level on its own. |
 | `public_exposable` | Public by design or commonly shown in masked examples. Reported as warn-level instead of block-level. |
+| `pii` | Personal information. PII-only findings are capped to warn-level; findings can still block when non-PII signals alone reach the block threshold. |
 
 Examples of `public_exposable` behavior:
 

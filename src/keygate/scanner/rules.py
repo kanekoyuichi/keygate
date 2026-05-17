@@ -225,7 +225,10 @@ RULES: list[Rule] = [
             "Use managed identities or Azure Key Vault instead",
         ],
     ),
-    # --- PII rules (always WARN, never BLOCK) ---
+    # --- PII rules ---
+    # PII alone is capped to WARN. If non-PII signals (entropy, context, path)
+    # are strong enough to reach block_score without the PII rule, the result
+    # escalates to BLOCK. See scoring.aggregate for the cap logic.
     Rule(
         rule_id="pii-email",
         pattern=re.compile(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"),
@@ -240,7 +243,13 @@ RULES: list[Rule] = [
     Rule(
         rule_id="pii-phone-jp",
         pattern=re.compile(
-            r"(?:(?:0[5-9]0|0[1-9]\d{0,3})[-\s]\d{1,4}[-\s]\d{4}|\+81[-\s]?\d{1,4}[-\s]\d{1,4}[-\s]\d{4})"
+            r"(?:"
+            r"\b(?:0[5-9]0|0[1-9]\d{0,3})[-\s]\d{1,4}[-\s]\d{4}"
+            r"|\+81[-\s]?\d{1,4}[-\s]\d{1,4}[-\s]\d{4}"
+            r"|\b0[5789]0\d{8}"
+            r"|(?<!\d)\(0\d{1,4}\)[-\s]?\d{1,4}[-\s]\d{4}"
+            r"|\b0\d{1,4}\(\d{1,4}\)\d{4}"
+            r")(?:(?:\s*(?:ext\.?|x|内線)\s*\d{1,6})\b|\b)"
         ),
         score=50,
         policy="pii",
@@ -259,6 +268,7 @@ RULES: list[Rule] = [
             r"|3[47][0-9]{2}[-\s]?[0-9]{6}[-\s]?[0-9]{5}"
             r"|6(?:011|5[0-9]{2})[-\s]?[0-9]{4}[-\s]?[0-9]{4}[-\s]?[0-9]{4}"
             r"|3(?:0[0-5]|[68][0-9])[0-9][-\s]?[0-9]{6}[-\s]?[0-9]{4}"
+            r"|35(?:2[89]|[3-8][0-9])[-\s]?[0-9]{4}[-\s]?[0-9]{4}[-\s]?[0-9]{4}"
             r")\b"
         ),
         score=50,
@@ -290,7 +300,8 @@ RULES: list[Rule] = [
             r"|EE|EG|ES|FI|FO|FR|GB|GE|GI|GL|GR|GT|HR|HU|IE|IL|IQ|IS|IT"
             r"|JO|KW|KZ|LB|LC|LI|LT|LU|LV|MC|MD|ME|MK|MR|MT|MU|NL|NO|PK"
             r"|PL|PS|PT|QA|RO|RS|SA|SC|SE|SI|SK|SM|ST|SV|TL|TN|TR|UA|VA|VG|XK)"
-            r"\d{2}[A-Z0-9]{11,30}\b"
+            r"\d{2}(?:[ ]?[A-Z0-9]{4}){2,7}[ ]?[A-Z0-9]{1,4}\b",
+            re.IGNORECASE,
         ),
         score=50,
         policy="pii",
@@ -303,7 +314,7 @@ RULES: list[Rule] = [
     Rule(
         rule_id="pii-uk-nin",
         pattern=re.compile(
-            r"\b[A-CEGHJ-PR-TW-Z][A-CEGHJ-NPR-TW-Z]\d{6}[A-D]\b"
+            r"\b[A-CEGHJ-PR-TW-Z][A-CEGHJ-NPR-TW-Z][ ]?\d{2}[ ]?\d{2}[ ]?\d{2}[ ]?[A-D]\b"
         ),
         score=50,
         policy="pii",

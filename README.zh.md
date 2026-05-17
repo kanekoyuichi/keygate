@@ -49,8 +49,12 @@ KeyGate **在提交发生之前自动拦截**。无需任何配置即可开始�
 - PyPI API 令牌
 - Django Secret Key
 - Azure Storage 账户密钥
+- URL 中嵌入的凭据（例如 `postgres://user:password@host`） <!-- # keygate: ignore reason="documentation example" -->
+- 疑似个人信息：电子邮件地址、日本电话号码（支持 `03-1234-5678` 和 `090-1234-5678` 等带分隔符格式、以 `090`/`080`/`070`/`050` 开头的无分隔符手机号、`(03)1234-5678` 和 `03(1234)5678` 等括号格式、`+81-...` 国际格式，以及 `ext. 123` 或 `内線 456` 等分机号后缀）、信用卡号（含 JCB）、美国 SSN、IBAN（紧凑格式和空格分组格式，不区分大小写）、英国 National Insurance Number（紧凑格式 `AB123456C` 和空格格式 `AB 12 34 56 C`）
 - 看起来随机的长字符串（高熵检测）
 - 变量名如 `api_key`、`password`、`secret` 与其对应值的组合
+
+仅检测到个人信息时，KeyGate 会以 WARN 报告，不会阻止提交。若同一行还包含足够强的非 PII 密钥信号，并且这些信号本身已达到 block 阈值，则仍可能阻止提交。
 
 ---
 

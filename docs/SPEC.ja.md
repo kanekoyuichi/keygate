@@ -114,6 +114,8 @@ path = ".keygate.baseline.json"
 - Django secret key
 - Azure Storage account key
 - `postgres://user:password@host` のような埋め込み credentials を含む URL <!-- keygate: ignore reason="documentation example" -->
+- 個人情報らしい値:
+  email address、日本の電話番号、JCB を含む credit card number、US SSN、IBAN、UK National Insurance Number
 
 各ルールは次を持ちます。
 
@@ -123,12 +125,13 @@ path = ".keygate.baseline.json"
 
 ### ポリシー
 
-ユーザーから見える policy は 2 種類あります。
+ユーザーから見える policy は 3 種類あります。
 
 | Policy | 意味 |
 | --- | --- |
 | `must_block` | デフォルトで機密扱い。強い一致なら単独で block に届きやすい。 |
 | `public_exposable` | 公開前提、またはマスク済みサンプルでよく現れる値。block ではなく warn 相当で扱う。 |
+| `pii` | 個人情報。PII 単独の finding は warn 相当に抑える。ただし PII 以外のシグナルだけで block 閾値に届く場合は block し得る。 |
 
 `public_exposable` の例:
 

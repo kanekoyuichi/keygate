@@ -61,6 +61,10 @@ def parse_diff(diff_output: str) -> list[DiffLine]:
             current_file = raw[6:]
             continue
 
+        if raw == "+++ /dev/null":
+            current_file = None
+            continue
+
         if raw.startswith("@@"):
             m = _HUNK_HEADER.match(raw)
             if m:
