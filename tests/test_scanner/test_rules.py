@@ -191,6 +191,13 @@ def test_pii_rule_matches(content, rule_id):
         f"Expected {rule_id} to match in: {content}"
 
 
+def test_uk_nin_not_detected_as_iban():
+    matches = scan_line('nin = "AB123456C"')  # keygate: ignore reason="test fixture"
+    rule_ids = [m.rule_id for m in matches]
+    assert "pii-uk-nin" in rule_ids
+    assert "pii-iban" not in rule_ids
+
+
 def test_pii_rules_have_pii_policy():
     pii_rules = [r for r in RULES if r.rule_id.startswith("pii-")]
     assert len(pii_rules) == 6

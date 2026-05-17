@@ -280,7 +280,7 @@ RULES: list[Rule] = [
     ),
     Rule(
         rule_id="pii-iban",
-        pattern=re.compile(r"\b[A-Z]{2}\d{2}[A-Z0-9]{4,30}\b"),
+        pattern=re.compile(r"\b[A-Z]{2}\d{2}[A-Z0-9]{11,30}\b"),
         score=50,
         policy="pii",
         description="IBAN (International Bank Account Number) detected",
