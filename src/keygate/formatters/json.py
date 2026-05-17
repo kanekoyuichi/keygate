@@ -10,14 +10,27 @@ SCHEMA_VERSION = "1"
 _RECOMMENDED_ACTION_BY_RULE: dict[str, str] = {
     "aws-access-key": "move_to_secret_manager",
     "openai-api-key": "move_to_secret_manager",
+    "anthropic-api-key": "move_to_secret_manager",
+    "google-api-key": "move_to_secret_manager",
     "github-token": "move_to_secret_manager",
+    "gitlab-token": "move_to_secret_manager",
     "slack-token": "move_to_secret_manager",
     "private-key-pem": "move_to_secret_manager",
     "stripe-secret-key": "move_to_secret_manager",
     "sendgrid-api-key": "move_to_secret_manager",
+    "npm-token": "move_to_secret_manager",
+    "pypi-token": "move_to_secret_manager",
+    "django-secret-key": "move_to_secret_manager",
+    "azure-connection-string": "move_to_secret_manager",
     "url-credentials": "remove_from_commit",
     "jwt": "manual_review",
     "stripe-publishable-key": "manual_review",
+    "pii-email": "remove_from_commit",
+    "pii-phone-jp": "remove_from_commit",
+    "pii-credit-card": "remove_from_commit",
+    "pii-ssn": "remove_from_commit",
+    "pii-iban": "remove_from_commit",
+    "pii-uk-nin": "remove_from_commit",
 }
 
 
