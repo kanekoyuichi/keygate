@@ -173,17 +173,17 @@ def test_url_with_port_only_not_matched():
 # ---------- PII rules ----------
 
 @pytest.mark.parametrize("content,rule_id", [
-    ('email = "user@example.com"', "pii-email"),
-    ('contact = "yamada@company.co.jp"', "pii-email"),
-    ('tel = "03-1234-5678"', "pii-phone-jp"),
-    ('mobile = "090-1234-5678"', "pii-phone-jp"),
-    ('intl = "+81-3-1234-5678"', "pii-phone-jp"),
-    ('card = "4111111111111111"', "pii-credit-card"),
-    ('card = "5500005555555559"', "pii-credit-card"),
-    ('card = "378282246310005"', "pii-credit-card"),
-    ('ssn = "123-45-6789"', "pii-ssn"),
-    ('iban = "GB29NWBK60161331926819"', "pii-iban"),
-    ('nin = "AB123456C"', "pii-uk-nin"),
+    ('email = "user@example.com"', "pii-email"),  # keygate: ignore reason="test fixture"
+    ('contact = "yamada@company.co.jp"', "pii-email"),  # keygate: ignore reason="test fixture"
+    ('tel = "03-1234-5678"', "pii-phone-jp"),  # keygate: ignore reason="test fixture"
+    ('mobile = "090-1234-5678"', "pii-phone-jp"),  # keygate: ignore reason="test fixture"
+    ('intl = "+81-3-1234-5678"', "pii-phone-jp"),  # keygate: ignore reason="test fixture"
+    ('card = "4111111111111111"', "pii-credit-card"),  # keygate: ignore reason="test fixture"
+    ('card = "5500005555555559"', "pii-credit-card"),  # keygate: ignore reason="test fixture"
+    ('card = "378282246310005"', "pii-credit-card"),  # keygate: ignore reason="test fixture"
+    ('ssn = "123-45-6789"', "pii-ssn"),  # keygate: ignore reason="test fixture"
+    ('iban = "GB29NWBK60161331926819"', "pii-iban"),  # keygate: ignore reason="test fixture"
+    ('nin = "AB123456C"', "pii-uk-nin"),  # keygate: ignore reason="test fixture"
 ])
 def test_pii_rule_matches(content, rule_id):
     matches = scan_line(content)
