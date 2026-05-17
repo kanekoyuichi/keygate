@@ -223,15 +223,24 @@ def test_pii_alone_is_warn():
     assert result.total_score == 50
 
 
-def test_pii_capped_at_warn_even_with_high_context():
-    signals = ctx(keyword_score=25, keyword_tier="high", path_score=20, assignment_score=15)
-    result = aggregate(make_line(), [make_pii_match()], 20, signals)
+def test_pii_capped_when_context_alone_does_not_block():
+    # PII score=50, context=35 → total=85, non_pii=35 < 70 → cap to WARN
+    signals = ctx(path_score=20, assignment_score=15)
+    result = aggregate(make_line(), [make_pii_match()], 0, signals)
     assert result.verdict == Verdict.WARN
     assert result.total_score == 40
     assert "cap:pii" in result.score_breakdown
 
 
 def test_pii_cap_breakdown_value_is_warn_score():
-    signals = ctx(keyword_score=25, keyword_tier="high", assignment_score=15)
-    result = aggregate(make_line(), [make_pii_match()], 20, signals)
+    signals = ctx(path_score=20, assignment_score=15)
+    result = aggregate(make_line(), [make_pii_match()], 0, signals)
     assert result.score_breakdown["cap:pii"] == 40
+
+
+def test_pii_not_capped_when_non_pii_signals_alone_would_block():
+    # PII score=50, context (entropy+keyword+path+assignment) = 80 → non_pii=80 >= 70 → BLOCK
+    signals = ctx(keyword_score=25, keyword_tier="high", path_score=20, assignment_score=15)
+    result = aggregate(make_line(), [make_pii_match()], 20, signals)
+    assert result.verdict == Verdict.BLOCK
+    assert "cap:pii" not in result.score_breakdown

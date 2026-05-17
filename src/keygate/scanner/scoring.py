@@ -118,7 +118,12 @@ def aggregate(
     else:
         verdict = Verdict.IGNORE
 
-    if verdict == Verdict.BLOCK and top_match is not None and top_match.policy == "pii":
+    if (
+        verdict == Verdict.BLOCK
+        and top_match is not None
+        and top_match.policy == "pii"
+        and (total - top_match.score) < block_score
+    ):
         breakdown["cap:pii"] = warn_score
         total = min(total, warn_score)
         verdict = Verdict.WARN
