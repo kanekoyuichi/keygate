@@ -113,7 +113,17 @@ path = ".keygate.baseline.json"
 - PyPI API token
 - Django secret key
 - Azure Storage account key
+- Azure SAS token
+- Hugging Face token
+- Docker Hub access token
+- Vercel token
+- Sentry DSN
+- Datadog API / application key
+- Discord token / webhook URL
+- Telegram bot token
+- Twilio auth token
 - `postgres://user:password@host` のような埋め込み credentials を含む URL <!-- keygate: ignore reason="documentation example" -->
+- Authorization header（`Bearer` とデコード可能な `Basic` credentials）
 - 個人情報らしい値:
   email address、日本の電話番号、JCB を含む credit card number、US SSN、IBAN、UK National Insurance Number
 
@@ -136,6 +146,7 @@ path = ".keygate.baseline.json"
 `public_exposable` の例:
 
 - Stripe publishable key
+- Sentry DSN
 - `postgres://user:***@host/db` のようなマスク済み URL credentials <!-- keygate: ignore reason="documentation example" -->
 
 ### エントロピー検知
@@ -146,7 +157,7 @@ path = ".keygate.baseline.json"
 
 - `api_key` や `password` のような変数名
 - `NAME=...` のような代入構文
-- `.env` のような機微なファイルパス
+- `.env`、`.npmrc`、`.pypirc`、`kubeconfig`、`terraform.tfvars`、Docker config のような機微なファイルパス
 
 ### コンテキストシグナル
 

@@ -1,0 +1,9 @@
+hf_short
+vercel_token=short
+DD_API_KEY=nothexvalue
+Authorization: Bearer short
+Authorization: Basic bm90LWNvbG9u
+Authorization: Basic dXNlcjoqKio=
+https://example.com/path?q=1
+090123456789
+03-1234-5678abc

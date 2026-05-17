@@ -68,6 +68,12 @@ def test_no_keyword_match(content):
     ".env.production",
     ".env.local",
     "apps/.env.staging",
+    ".npmrc",
+    ".pypirc",
+    "kubeconfig",
+    "terraform.tfvars",
+    ".docker/config.json",
+    "docker/config.json",
 ])
 def test_very_sensitive_path(path):
     s = score_line("x=1", path)

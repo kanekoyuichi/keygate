@@ -23,6 +23,18 @@ from keygate.scanner.rules import RULES, scan_line
     ("token = pypi-" + "A" * 50, "pypi-token"),  # keygate: ignore reason="test fixture"
     ("SECRET_KEY = 'django-insecure-" + "a" * 50 + "'", "django-secret-key"),  # keygate: ignore reason="test fixture"
     ("conn = 'AccountKey=" + "A" * 86 + "==" + "'", "azure-connection-string"),  # keygate: ignore reason="test fixture"
+    ("url = 'https://acct.blob.core.windows.net/c/blob?sv=2024-11-04&sp=r&sig=" + "A" * 32 + "'", "azure-sas-token"),  # keygate: ignore reason="test fixture"
+    ("token = 'hf_" + "A" * 34 + "'", "huggingface-token"),  # keygate: ignore reason="test fixture"
+    ("token = 'dckr_pat_" + "A" * 24 + "'", "dockerhub-token"),  # keygate: ignore reason="test fixture"
+    ("VERCEL_TOKEN=" + "A" * 24, "vercel-token"),  # keygate: ignore reason="test fixture"
+    ("SENTRY_DSN='https://" + "a" * 32 + "@sentry.example/123'", "sentry-dsn"),  # keygate: ignore reason="test fixture"
+    ("DD_API_KEY=" + "a" * 32, "datadog-api-key"),  # keygate: ignore reason="test fixture"
+    ("token = 'M" + "A" * 23 + "." + "B" * 6 + "." + "C" * 27 + "'", "discord-token"),  # keygate: ignore reason="test fixture"
+    ("url = 'https://discord.com/api/webhooks/123456789012345678/" + "A" * 60 + "'", "discord-webhook-url"),  # keygate: ignore reason="test fixture"
+    ("token = '123456789:" + "A" * 35 + "'", "telegram-bot-token"),  # keygate: ignore reason="test fixture"
+    ("TWILIO_AUTH_TOKEN=" + "a" * 32, "twilio-auth-token"),  # keygate: ignore reason="test fixture"
+    ("Authorization: Bearer " + "A" * 24, "authorization-bearer"),  # keygate: ignore reason="test fixture"
+    ("Authorization: Basic dXNlcjpwYXNzd29yZA==", "authorization-basic"),  # keygate: ignore reason="test fixture"
 ])
 def test_rule_matches(content, rule_id):
     matches = scan_line(content)
@@ -144,6 +156,12 @@ def test_url_credentials_masked_is_downgraded(masked):
     '"pypi-tooshort"',
     # Azure AccountKey without enough chars
     '"AccountKey=tooshort"',
+    # Context-bound service tokens without enough structure
+    '"hf_short"',
+    '"vercel_token=short"',
+    '"DD_API_KEY=nothexvalue"',
+    '"Authorization: Bearer short"',
+    '"Authorization: Basic bm90LWNvbG9u"',
 ])
 def test_no_false_positive(content):
     matches = scan_line(content)
@@ -168,6 +186,14 @@ def test_url_without_credentials_not_matched():
 
 def test_url_with_port_only_not_matched():
     assert scan_line("URL = 'https://example.com:443/path'") == []
+
+
+def test_basic_auth_without_colon_not_matched():
+    assert scan_line("Authorization: Basic bm90LWNvbG9u") == []
+
+
+def test_basic_auth_with_masked_password_not_matched():
+    assert scan_line("Authorization: Basic dXNlcjoqKio=") == []
 
 
 # ---------- PII rules ----------
