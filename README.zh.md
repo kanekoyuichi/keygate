@@ -36,10 +36,19 @@ KeyGate **在提交发生之前自动拦截**。无需任何配置即可开始�
 
 - AWS 访问密钥
 - OpenAI API 密钥
+- Anthropic API 密钥
+- Google API 密钥
 - GitHub Token
+- GitLab 个人访问令牌
 - Slack Token
 - 私钥（PEM 格式）
 - JWT Token
+- Stripe 密钥
+- SendGrid API 密钥
+- npm 访问令牌
+- PyPI API 令牌
+- Django Secret Key
+- Azure Storage 账户密钥
 - 看起来随机的长字符串（高熵检测）
 - 变量名如 `api_key`、`password`、`secret` 与其对应值的组合
 

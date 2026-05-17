@@ -99,13 +99,20 @@ path = ".keygate.baseline.json"
 
 - AWS access key
 - OpenAI API key
+- Anthropic API key
+- Google API key
 - GitHub token
+- GitLab personal access token
 - Slack token
 - PEM 形式の private key
 - JWT
 - Stripe live secret key
 - Stripe live publishable key
 - SendGrid API key
+- npm access token
+- PyPI API token
+- Django secret key
+- Azure Storage account key
 - `postgres://user:password@host` のような埋め込み credentials を含む URL <!-- keygate: ignore reason="documentation example" -->
 
 各ルールは次を持ちます。

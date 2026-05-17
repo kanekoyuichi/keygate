@@ -99,13 +99,20 @@ path = ".keygate.baseline.json"
 
 - AWS access keys
 - OpenAI API keys
+- Anthropic API keys
+- Google API keys
 - GitHub tokens
+- GitLab personal access tokens
 - Slack tokens
 - private keys in PEM format
 - JWTs
 - Stripe live secret keys
 - Stripe live publishable keys
 - SendGrid API keys
+- npm access tokens
+- PyPI API tokens
+- Django secret keys
+- Azure Storage account keys
 - URLs with embedded credentials such as `postgres://user:password@host` <!-- keygate: ignore reason="documentation example" -->
 
 Each rule has:
