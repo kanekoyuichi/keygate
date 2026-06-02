@@ -80,6 +80,15 @@ def _run_scan(repo_root: Path) -> ScanReport:
     return _build_report(blocked, warned, len(diff_lines))
 
 
+def _internal_error_message(exc: Exception) -> str:
+    return (
+        f"[KEYGATE] internal error: {type(exc).__name__}: {exc}\n"
+        "This is a keygate bug. The commit was blocked to stay safe.\n"
+        "To bypass once: git commit --no-verify\n"
+        "Please report this at https://github.com/kanekoyuichi/keygate/issues"
+    )
+
+
 def _resolve_format(format_opt: str | None, json_flag: bool, profile: str | None) -> str:
     """Resolve effective output format. Returns 'text' or 'json'.
 
@@ -164,8 +173,14 @@ def scan(format_opt: str | None, json_flag: bool, profile: str | None) -> None:
     """Scan staged diff for secrets."""
     output_format = _resolve_format(format_opt, json_flag, profile)
 
-    repo_root = get_repo_root(Path.cwd())
-    report = _run_scan(repo_root)
+    try:
+        repo_root = get_repo_root(Path.cwd())
+        report = _run_scan(repo_root)
+    except click.ClickException:
+        raise
+    except Exception as exc:  # noqa: BLE001 - last-resort guardrail for the hook
+        click.echo(_internal_error_message(exc), err=True)
+        raise SystemExit(1) from exc
 
     if output_format == "json":
         click.echo(json_formatter.format(report))

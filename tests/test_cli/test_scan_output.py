@@ -162,6 +162,38 @@ def test_scan_help_does_not_error():
     assert "keygate scan --profile agent" in result.output
 
 
+def test_scan_internal_error_blocks_with_message(tmp_path, monkeypatch):
+    def boom(_root):
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(cli, "get_repo_root", lambda _cwd: tmp_path)
+    monkeypatch.setattr(cli, "_run_scan", boom)
+
+    runner = CliRunner()
+    result = runner.invoke(cli.main, ["scan"])
+
+    # 想定外の内部エラーは fail-closed でブロック (exit 1)
+    assert result.exit_code == 1
+    assert "internal error" in result.output
+    assert "RuntimeError: boom" in result.output
+
+
+def test_scan_click_exception_not_swallowed_as_internal_error(tmp_path, monkeypatch):
+    def raise_click(_root):
+        raise cli.click.ClickException("bad config")
+
+    monkeypatch.setattr(cli, "get_repo_root", lambda _cwd: tmp_path)
+    monkeypatch.setattr(cli, "_run_scan", raise_click)
+
+    runner = CliRunner()
+    result = runner.invoke(cli.main, ["scan"])
+
+    # ClickException は従来どおり扱われ、internal error 経路に飲み込まれない
+    assert result.exit_code == 1
+    assert "bad config" in result.output
+    assert "internal error" not in result.output
+
+
 def test_main_help_lists_subcommands():
     runner = CliRunner()
     result = runner.invoke(cli.main, ["--help"])
