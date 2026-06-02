@@ -5,6 +5,8 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
+import click
+
 from keygate.models import DiffLine, PolicyResult, RuleMatch, ScanResult
 
 _VERSION = 1
@@ -28,8 +30,20 @@ class BaselineStore:
     def load(self) -> None:
         if not self._path.exists():
             return
-        data = json.loads(self._path.read_text())
-        self._entries = {e["fingerprint"]: e for e in data.get("entries", [])}
+        try:
+            data = json.loads(self._path.read_text())
+            entries = data.get("entries", [])
+            self._entries = {
+                e["fingerprint"]: e
+                for e in entries
+                if isinstance(e, dict) and "fingerprint" in e
+            }
+        except (json.JSONDecodeError, OSError, AttributeError, TypeError) as e:
+            click.echo(
+                f"[KEYGATE] warning: ignoring unreadable baseline {self._path}: {e}",
+                err=True,
+            )
+            self._entries = {}
 
     def save(self) -> None:
         data = {

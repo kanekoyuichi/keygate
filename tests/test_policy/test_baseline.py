@@ -109,3 +109,27 @@ def test_check_result_requires_all_rule_matches_to_be_baselined(tmp_path):
 
     store.add(line, new)
     assert store.check_result(make_result(line=line, matches=[known, new])).suppressed is True
+
+
+def test_load_corrupt_baseline_does_not_raise(tmp_path, capsys):
+    path = tmp_path / ".keygate.baseline.json"
+    path.write_text("not json {{{")
+    store = BaselineStore(path)
+    store.load()  # 例外を出さず空として継続する
+    assert store.count() == 0
+    assert "ignoring unreadable baseline" in capsys.readouterr().err
+
+
+def test_load_skips_malformed_entries(tmp_path):
+    path = tmp_path / ".keygate.baseline.json"
+    path.write_text(json.dumps({
+        "version": 1,
+        "entries": [
+            {"fingerprint": "good", "rule_id": "aws-access-key"},
+            {"rule_id": "no-fingerprint"},  # fingerprint 欠落 → スキップ
+            "not-a-dict",                    # 非 dict → スキップ
+        ],
+    }))
+    store = BaselineStore(path)
+    store.load()
+    assert store.count() == 1
