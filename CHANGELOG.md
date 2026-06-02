@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.1] - 2026-06-03
+
+### Fixes
+
+- Detect modern OpenAI key formats (`sk-proj-...`, `sk-svcacct-...`) that the previous `sk-` rule missed, while excluding `sk-ant-...` so Anthropic keys are not double-matched. Closes a detection gap for the most common OpenAI key shape.
+- Disable git `core.quotepath` when reading the staged diff so non-ASCII (e.g. Japanese) file paths are no longer corrupted. Restores path-based scoring, test-file penalties, allowlist path matching, and baseline fingerprints for those files. Closes a detection gap for international file names.
+- Force `--no-color` and `--no-ext-diff` on `git diff` so colored output (`color.ui=always`) or an external diff driver can no longer cause all staged additions to be skipped silently. Closes a silent detection gap.
+- Guard baseline loading against a corrupt or malformed `.keygate.baseline.json`: warn on stderr and continue with an empty baseline instead of raising and blocking every commit. Malformed entries are skipped individually.
+- Add a last-resort guardrail to `keygate scan`: unexpected internal errors now print a concise message with a `git commit --no-verify` hint and fail closed (exit 1) instead of dumping a traceback. Configuration and usage errors keep their existing handling.
+
+### Docs
+
+- Note the additional OpenAI key formats (`sk-proj-...`) in README.ja.
+
+All changes remain fully offline; no full-repository scan, LLM-based judgement, or external API verification was added.
+
 ## [0.5.0] - 2026-05-17
 
 ### Features
