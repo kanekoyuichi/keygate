@@ -106,7 +106,7 @@ To ignore:
 ## 検知できるもの
 
 - AWS アクセスキー（`AKIA...`）
-- OpenAI API キー（`sk-...`）
+- OpenAI API キー（`sk-...`、`sk-proj-...` など）
 - Anthropic API キー（`sk-ant-...`）
 - Google API キー（`AIza...`）
 - GitHub トークン（`ghp_...`）

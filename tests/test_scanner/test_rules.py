@@ -5,6 +5,8 @@ from keygate.scanner.rules import RULES, scan_line
 @pytest.mark.parametrize("content,rule_id", [
     ("AWS_KEY=AKIAIOSFODNN7EXAMPLE1234", "aws-access-key"),
     ("key = sk-abcdefghijklmnopqrstuvwxyz123456", "openai-api-key"),
+    ("key = sk-proj-" + "A" * 40, "openai-api-key"),  # keygate: ignore reason="test fixture"
+    ("key = sk-svcacct-" + "A" * 40, "openai-api-key"),  # keygate: ignore reason="test fixture"
     ("token = ghp_" + "A" * 36, "github-token"),
     ("token = xoxb-EXAMPLEFAKETOKEN1234", "slack-token"),
     ("-----BEGIN RSA PRIVATE KEY-----", "private-key-pem"),
@@ -173,6 +175,16 @@ def test_no_false_positive(content):
 
 def test_openai_like_short_string_not_matched():
     assert scan_line('"sk-short"') == []
+
+
+def test_anthropic_key_not_matched_as_openai():
+    # sk-ant- は anthropic ルールのみが拾い、openai に二重マッチしないこと
+    rule_ids = [
+        m.rule_id
+        for m in scan_line("key = sk-ant-api03-" + "A" * 95)  # keygate: ignore reason="test fixture"
+    ]
+    assert "anthropic-api-key" in rule_ids
+    assert "openai-api-key" not in rule_ids
 
 
 def test_fake_aws_prefix_not_matched():

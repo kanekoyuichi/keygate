@@ -76,6 +76,22 @@ def test_parse_multi_file():
     assert lines[1].file_path == "b.py"
 
 
+def test_parse_non_ascii_file_path():
+    # core.quotepath=false により非ASCIIパスは生のUTF-8でヘッダに現れる。
+    # quotepath が有効だと "\346..." のように壊れるため、その状態を固定する。
+    diff = """\
+diff --git a/設定.py b/設定.py
+index 0000000..1111111 100644
+--- a/設定.py
++++ b/設定.py
+@@ -1 +1,2 @@
++api_key = "secret"
+"""
+    lines = parse_diff(diff)
+    assert len(lines) == 1
+    assert lines[0].file_path == "設定.py"
+
+
 def test_empty_diff():
     assert parse_diff("") == []
 
@@ -150,7 +166,19 @@ def test_get_staged_diff_uses_cached_unified_zero(monkeypatch):
     get_staged_diff()
 
     assert calls[0] == ["git", "rev-parse", "--is-inside-work-tree"]
-    assert calls[1] == ["git", "diff", "--cached", "--unified=0"]
+    assert calls[1] == [
+        "git",
+        "-c",
+        "core.quotepath=false",
+        "diff",
+        "--cached",
+        "--unified=0",
+        "--no-color",
+        "--no-ext-diff",
+    ]
+    # quotepath 無効化と色抑止は検知漏れ防止のため必須
+    assert "core.quotepath=false" in calls[1]
+    assert "--no-color" in calls[1]
 
 
 def test_get_repo_root_uses_git_toplevel(monkeypatch, tmp_path):
