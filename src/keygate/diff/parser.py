@@ -40,7 +40,16 @@ def get_staged_diff() -> str:
 
     try:
         result = subprocess.run(
-            ["git", "diff", "--cached", "--unified=0"],
+            [
+                "git",
+                "-c",
+                "core.quotepath=false",
+                "diff",
+                "--cached",
+                "--unified=0",
+                "--no-color",
+                "--no-ext-diff",
+            ],
             capture_output=True,
             text=True,
         )

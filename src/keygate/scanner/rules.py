@@ -57,7 +57,7 @@ RULES: list[Rule] = [
     ),
     Rule(
         rule_id="openai-api-key",
-        pattern=re.compile(r"sk-[A-Za-z0-9]{32,}"),
+        pattern=re.compile(r"sk-(?!ant-)[A-Za-z0-9_-]{32,}"),
         score=85,
         description="OpenAI API Key detected",
         remediation=[
