@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.0] - 2026-06-12
+
+### Features
+
+- `keygate activate` no longer overwrites an existing pre-commit hook destructively. After confirmation, the existing hook is saved as `pre-commit.keygate-orig` and keeps running before the keygate scan (its non-zero exit code fails the commit and skips the scan). `keygate deactivate` restores the saved hook. Activation fails with an explicit error if a stale `pre-commit.keygate-orig` already exists.
+
+### Fixes
+
+- The placeholder demotion (BLOCK to WARN) no longer triggers just because the line contains `<...>` somewhere or ends with an empty assignment. It now requires an explicit placeholder word (`dummy`/`example`/`changeme`/`replace_me`/`placeholder`/`redacted`) in the line, or `<...>` inside the matched secret value itself. This closes a detection gap where a real key in a comment line or README could slip through; documented samples (e.g. `# example only`) still warn instead of blocking.
+- `keygate --version` now reads the version from the installed package metadata instead of a hardcoded string, so `pyproject.toml` is the single source of truth.
+
+### Docs
+
+- Document the existing-hook preservation behavior in the READMEs (en/ja/zh) and user specs, and the placeholder cap conditions in the internal detection rules.
+
+All changes remain fully offline; no full-repository scan, LLM-based judgement, or external API verification was added.
+
 ## [0.5.1] - 2026-06-03
 
 ### Fixes
