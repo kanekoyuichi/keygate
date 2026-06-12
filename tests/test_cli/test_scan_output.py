@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.metadata
 import json
 
 import pytest
@@ -204,10 +205,11 @@ def test_main_help_lists_subcommands():
 
 
 def test_main_version_option():
+    expected = importlib.metadata.version("keygate")
     runner = CliRunner()
     result = runner.invoke(cli.main, ["--version"])
     assert result.exit_code == 0
-    assert "keygate, version 0.5.1" in result.output
+    assert f"keygate, version {expected}" in result.output
 
 
 def test_install_hook_help_mentions_hooks_path():
