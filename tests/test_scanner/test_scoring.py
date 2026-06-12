@@ -108,6 +108,82 @@ def test_dummy_word_alone_does_not_cap_real_secret():
     assert "cap:placeholder_context" not in result.score_breakdown
 
 
+def test_angle_brackets_elsewhere_do_not_cap_real_secret_in_readme():
+    # 行内に <...> があるだけでは cap しない (M4: docs 中の実キー見逃し対策)
+    line = make_line(
+        content='OPENAI_API_KEY=sk-abcdefghijklmnopqrstuvwxyz123456  # see <docs/config>',  # keygate: ignore reason="test fixture"
+        file_path="README.md",
+    )
+    match = RuleMatch(
+        rule_id="openai-api-key",
+        matched_text="sk-abcdefghijklmnopqrstuvwxyz123456",  # keygate: ignore reason="test fixture"
+        score=85,
+        description="OpenAI API Key detected",
+        policy="must_block",
+    )
+    signals = ctx(keyword_score=25, keyword_tier="high", assignment_score=15)
+    result = aggregate(line, [match], 20, signals)
+    assert result.verdict == Verdict.BLOCK
+    assert "cap:placeholder_context" not in result.score_breakdown
+
+
+def test_commented_out_real_secret_blocks():
+    # コメントアウトされた実キーは cap されず BLOCK する (M4)
+    line = make_line(
+        content='# api_key = "sk-abcdefghijklmnopqrstuvwxyz123456"',  # keygate: ignore reason="test fixture"
+        file_path="app.py",
+    )
+    match = RuleMatch(
+        rule_id="openai-api-key",
+        matched_text="sk-abcdefghijklmnopqrstuvwxyz123456",  # keygate: ignore reason="test fixture"
+        score=85,
+        description="OpenAI API Key detected",
+        policy="must_block",
+    )
+    signals = ctx(keyword_score=25, keyword_tier="high")
+    result = aggregate(line, [match], 20, signals)
+    assert result.verdict == Verdict.BLOCK
+    assert "cap:placeholder_context" not in result.score_breakdown
+
+
+def test_angle_bracket_placeholder_in_matched_value_caps():
+    # 検出値そのものに <...> を含む場合はプレースホルダとして cap する
+    line = make_line(
+        content="DATABASE_URL=postgres://admin:<password>@db.example.com/app",  # keygate: ignore reason="test fixture"
+        file_path="README.md",
+    )
+    match = RuleMatch(
+        rule_id="url-credentials",
+        matched_text="postgres://admin:<password>@",  # keygate: ignore reason="test fixture"
+        score=85,
+        description="URL with embedded credentials detected",
+        policy="must_block",
+    )
+    signals = ctx(keyword_score=25, keyword_tier="high", assignment_score=15)
+    result = aggregate(line, [match], 0, signals)
+    assert result.verdict == Verdict.WARN
+    assert result.score_breakdown["cap:placeholder_context"] == 40
+
+
+def test_empty_assignment_suffix_does_not_cap_real_secret():
+    # 行末の空代入 (OTHER="") があっても実キーは cap しない (M4)
+    line = make_line(
+        content='api_key = "sk-abcdefghijklmnopqrstuvwxyz123456"; sample = ""',  # keygate: ignore reason="test fixture"
+        file_path="README.md",
+    )
+    match = RuleMatch(
+        rule_id="openai-api-key",
+        matched_text="sk-abcdefghijklmnopqrstuvwxyz123456",  # keygate: ignore reason="test fixture"
+        score=85,
+        description="OpenAI API Key detected",
+        policy="must_block",
+    )
+    signals = ctx(keyword_score=25, keyword_tier="high", assignment_score=15)
+    result = aggregate(line, [match], 20, signals)
+    assert result.verdict == Verdict.BLOCK
+    assert "cap:placeholder_context" not in result.score_breakdown
+
+
 def test_score_never_negative():
     line = make_line(content="dummy example placeholder", file_path="tests/test_app.py")
     result = aggregate(line, [], 0, ctx())
