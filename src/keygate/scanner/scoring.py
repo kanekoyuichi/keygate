@@ -11,16 +11,11 @@ _PLACEHOLDER_PATH = re.compile(
     r"(?:^|/)(?:README(?:\.[^.]+)?|docs/|tests/fixtures/|[^/]*\.env\.example$|[^/]*\.example\.[^/]+$)",
     re.IGNORECASE,
 )
-_PLACEHOLDER_VALUE = re.compile(
-    r"(?:"
-    r"\b(?:dummy|example|changeme|replace[_-]?me|placeholder|redacted)\b"
-    r"|<[^>]+>"
-    r'|=\s*(?:""|\'\'|None)\s*(?:#.*)?$'
-    r"|:\s*(?:\"\"|''|None)\s*(?:#.*)?$"
-    r"|=\s*(?:#.*)?$"
-    r")",
+_PLACEHOLDER_WORD = re.compile(
+    r"\b(?:dummy|example|changeme|replace[_-]?me|placeholder|redacted)\b",
     re.IGNORECASE,
 )
+_ANGLE_TOKEN = re.compile(r"<[^>]+>")
 _COMMENT_SAMPLE_CONTEXT = re.compile(
     r"^\s*#|"
     r"\b(?:example only|sample|placeholder|documentation)\b",
@@ -40,8 +35,12 @@ def _has_placeholder_path(file_path: str) -> bool:
     return bool(_PLACEHOLDER_PATH.search(file_path))
 
 
-def _has_placeholder_value(content: str) -> bool:
-    return bool(_PLACEHOLDER_VALUE.search(content))
+def _has_placeholder_value(content: str, matched_text: str) -> bool:
+    # 行内のどこかに <...> があるだけではプレースホルダとみなさない。
+    # 明示的なプレースホルダ語、または検出値そのものが <...> を含む場合に限る。
+    return bool(
+        _PLACEHOLDER_WORD.search(content) or _ANGLE_TOKEN.search(matched_text)
+    )
 
 
 def _has_comment_sample_context(content: str) -> bool:
@@ -132,7 +131,7 @@ def aggregate(
         verdict == Verdict.BLOCK
         and top_match is not None
         and top_match.policy == "must_block"
-        and _has_placeholder_value(diff_line.content)
+        and _has_placeholder_value(diff_line.content, top_match.matched_text)
         and (
             _has_placeholder_path(diff_line.file_path)
             or _has_comment_sample_context(diff_line.content)
