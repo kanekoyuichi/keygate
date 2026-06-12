@@ -215,7 +215,9 @@ path = ".keygate.baseline.json"
 
 `keygate activate` は、Git が実際に使う hooks ディレクトリへ pre-commit hook をインストールします。`keygate install-hook` は互換コマンドとして残します。
 
-`keygate deactivate` は keygate が導入した hook を削除します。既存 hook が keygate によるものではない場合は、削除前に確認します。`keygate uninstall-hook` は互換コマンドとして残します。
+keygate 以外の pre-commit hook が既に存在する場合、`keygate activate` は確認の上で既存 hook を同じ hooks ディレクトリの `pre-commit.keygate-orig` として保存し、生成された hook は keygate のスキャンより先に保存した hook を実行し続けます。保存した hook が非 0 で終了した場合は、その終了コードで commit が失敗し、keygate のスキャンは実行されません。`pre-commit.keygate-orig` が既に存在する場合は、エラーで失敗し手動での解決を求めます。
+
+`keygate deactivate` は keygate が導入した hook を削除します。既存 hook が keygate によるものではない場合は、削除前に確認します。`pre-commit.keygate-orig` として保存された hook がある場合は、pre-commit hook として復元します。`keygate uninstall-hook` は互換コマンドとして残します。
 
 hook はローカルで動き、次を満たすことを意図しています。
 

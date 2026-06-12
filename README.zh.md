@@ -88,6 +88,8 @@ keygate activate
 
 生成的 hook 会优先使用当前 Python 环境执行 `python -m keygate.cli scan`，只有在该方式不可用时才回退到 `keygate scan`。这样在 hook 执行时 PATH 受限的环境里也更可靠。
 
+如果仓库中已存在 pre-commit 钩子（例如 lint 钩子或 pre-commit framework 管理的钩子），KeyGate 会在确认后将其保存为 `pre-commit.keygate-orig`，并在 KeyGate 扫描之前继续执行它。`keygate deactivate` 会恢复保存的钩子。
+
 配置完成。
 
 ### 第三步：使用

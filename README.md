@@ -143,6 +143,8 @@ This installs KeyGate as a Git pre-commit hook. If your repo has `core.hooksPath
 
 The generated hook prefers the current Python environment (`python -m keygate.cli scan`) and falls back to `keygate scan`, which makes it more reliable on systems where the hook PATH is limited.
 
+If a pre-commit hook already exists (for example a lint hook or one managed by the pre-commit framework), KeyGate asks for confirmation, saves it as `pre-commit.keygate-orig`, and keeps running it before the KeyGate scan. `keygate deactivate` restores the saved hook.
+
 That's all the setup you need.
 
 ### Step 3: Use it

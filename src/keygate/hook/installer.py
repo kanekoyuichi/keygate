@@ -33,11 +33,21 @@ def _to_posix_path(path: str) -> str:
     return posix
 
 
+_MARKER = "# Installed by keygate"
+_BACKUP_NAME = "pre-commit.keygate-orig"
+
+
 def _build_hook_script() -> str:
     python_executable = shlex.quote(_to_posix_path(sys.executable))
     return f"""\
 #!/bin/sh
-# Installed by keygate
+{_MARKER}
+
+# Run the pre-existing hook (saved by 'keygate activate') first.
+hook_dir=$(dirname "$0")
+if [ -x "$hook_dir/{_BACKUP_NAME}" ]; then
+  "$hook_dir/{_BACKUP_NAME}" "$@" || exit $?
+fi
 
 if [ -x {python_executable} ]; then
   exec {python_executable} -m keygate.cli scan
@@ -63,12 +73,21 @@ def install(repo_root: Path) -> None:
     hooks_dir = _resolve_hooks_dir(repo_root)
     hooks_dir.mkdir(exist_ok=True)
     hook_path = hooks_dir / "pre-commit"
+    backup_path = hooks_dir / _BACKUP_NAME
 
-    if hook_path.exists():
+    if hook_path.exists() and _MARKER not in hook_path.read_text():
+        if backup_path.exists():
+            raise click.ClickException(
+                f"{backup_path} already exists. "
+                f"Resolve it manually (restore or remove) before 'keygate activate'."
+            )
         click.confirm(
-            f"{hook_path} already exists. Overwrite?",
+            f"{hook_path} already exists. "
+            f"Keep it as {_BACKUP_NAME} and run it before keygate?",
             abort=True,
         )
+        hook_path.rename(backup_path)
+        click.echo(f"Existing hook saved: {backup_path}")
 
     hook_path.write_text(_build_hook_script())
     hook_path.chmod(0o755)
@@ -78,6 +97,7 @@ def install(repo_root: Path) -> None:
 def uninstall(repo_root: Path) -> None:
     hooks_dir = _resolve_hooks_dir(repo_root)
     hook_path = hooks_dir / "pre-commit"
+    backup_path = hooks_dir / _BACKUP_NAME
 
     try:
         content = hook_path.read_text()
@@ -85,7 +105,7 @@ def uninstall(repo_root: Path) -> None:
         click.echo("No pre-commit hook found.")
         return
 
-    if "# Installed by keygate" not in content:
+    if _MARKER not in content:
         click.confirm(
             f"{hook_path} was not installed by keygate. Remove anyway?",
             abort=True,
@@ -93,3 +113,7 @@ def uninstall(repo_root: Path) -> None:
 
     hook_path.unlink()
     click.echo(f"Pre-commit hook disabled: {hook_path}")
+
+    if backup_path.exists():
+        backup_path.rename(hook_path)
+        click.echo(f"Previous hook restored: {hook_path}")
