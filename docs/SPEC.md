@@ -216,7 +216,9 @@ When you run `keygate scan`, or when the installed Git hook runs it during `git 
 
 `keygate activate` installs a pre-commit hook into the hooks directory Git actually uses. `keygate install-hook` is kept as a compatibility alias.
 
-`keygate deactivate` removes hooks installed by keygate. If the existing hook was not installed by keygate, it asks for confirmation before removal. `keygate uninstall-hook` is kept as a compatibility alias.
+If a pre-commit hook not installed by keygate already exists, `keygate activate` asks for confirmation, saves it as `pre-commit.keygate-orig` in the same hooks directory, and the generated hook keeps running it before the keygate scan. If the saved hook exits non-zero, the commit fails with that exit code and the keygate scan does not run. If `pre-commit.keygate-orig` already exists, activation fails with an error and asks you to resolve it manually.
+
+`keygate deactivate` removes hooks installed by keygate. If the existing hook was not installed by keygate, it asks for confirmation before removal. If a hook was saved as `pre-commit.keygate-orig`, it is restored as the pre-commit hook. `keygate uninstall-hook` is kept as a compatibility alias.
 
 The hook runs locally and is intended to be:
 

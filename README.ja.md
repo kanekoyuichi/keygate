@@ -58,6 +58,9 @@ keygate activate
 > **何が起きるの？**  
 > Git の「コミット直前に自動で走るスクリプト」（pre-commit フック）として KeyGate を登録します。以降の `git commit` で自動的に動くようになります。
 
+> **既に pre-commit フックがある場合**  
+> 確認の上で既存フックを `pre-commit.keygate-orig` として保存し、KeyGate のスキャンより先に実行し続けます。`keygate deactivate` で保存したフックが復元されます。
+
 > **Windows の場合**: [Git for Windows](https://gitforwindows.org/) が必要です。hook は Git for Windows に同梱の MSYS2 シェルで実行されます。`pipx` ではなく `pip install` で `keygate` をインストールした場合は、使用しているシェルで virtualenv を有効化してから `keygate activate` を実行してください。`pipx` でインストールした場合はこの手順は不要です。WSL でも動作します。
 
 **以上で完了です。** あとは普段通りに開発するだけです。
