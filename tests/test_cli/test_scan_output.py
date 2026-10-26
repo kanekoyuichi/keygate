@@ -334,3 +334,21 @@ def test_baseline_update_reports_only_new_entries(tmp_path, monkeypatch):
     assert second.exit_code == 0
     assert "Baseline updated: 1 new finding(s) added." in first.output
     assert "Baseline updated: 0 new finding(s) added." in second.output
+
+
+def test_scan_diff_parse_error_fails_closed(tmp_path, monkeypatch):
+    from keygate.diff.parser import DiffParseError
+
+    def boom(_root):
+        raise DiffParseError("added lines appeared before a recognizable file header")
+
+    monkeypatch.setattr(cli, "get_repo_root", lambda _cwd: tmp_path)
+    monkeypatch.setattr(cli, "_run_scan", boom)
+
+    runner = CliRunner()
+    result = runner.invoke(cli.main, ["scan"])
+
+    # ヘッダを解釈できない diff は無言で pass にせず、内部エラー経路でブロックする
+    assert result.exit_code == 1
+    assert "internal error" in result.output
+    assert "DiffParseError" in result.output

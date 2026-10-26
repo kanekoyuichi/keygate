@@ -293,3 +293,14 @@ def test_pii_no_false_positive(content):
     pii_matches = [m for m in scan_line(content) if m.rule_id.startswith("pii-")]
     assert pii_matches == [], \
         f"Unexpected PII match on: {content} → {[m.rule_id for m in pii_matches]}"
+
+
+def test_long_alphanumeric_line_scans_quickly():
+    # url-credentials / pii-email が英数字の連続の途中から再試行すると
+    # 行長に対して二次関数的に遅くなり、base64 blob 1 行で hook が固まる。
+    import time
+
+    line = "".join("abcdefghijklmnopqrstuvwxyz0123456789"[i % 36] for i in range(50_000))
+    start = time.perf_counter()
+    assert scan_line(line) == []
+    assert time.perf_counter() - start < 1.0

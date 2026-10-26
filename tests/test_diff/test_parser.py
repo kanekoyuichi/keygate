@@ -160,7 +160,7 @@ def test_get_staged_diff_uses_cached_unified_zero(monkeypatch):
 
     def fake_run(args, **kwargs):
         calls.append(args)
-        return subprocess.CompletedProcess(args, 0, stdout="")
+        return subprocess.CompletedProcess(args, 0, stdout=b"" if "diff" in args else "")
 
     monkeypatch.setattr(subprocess, "run", fake_run)
     get_staged_diff()
@@ -175,10 +175,119 @@ def test_get_staged_diff_uses_cached_unified_zero(monkeypatch):
         "--unified=0",
         "--no-color",
         "--no-ext-diff",
+        "--src-prefix=a/",
+        "--dst-prefix=b/",
     ]
     # quotepath 無効化と色抑止は検知漏れ防止のため必須
     assert "core.quotepath=false" in calls[1]
     assert "--no-color" in calls[1]
+    # prefix 固定は diff.noprefix / mnemonicPrefix による全行スキップ防止のため必須
+    assert "--dst-prefix=b/" in calls[1]
+
+
+def test_get_staged_diff_tolerates_non_utf8_bytes(monkeypatch):
+    def fake_run(args, **kwargs):
+        if "diff" in args:
+            return subprocess.CompletedProcess(args, 0, stdout=b"+++ b/a.txt\n+\x82\xa0 key\n", stderr=b"")
+        return subprocess.CompletedProcess(args, 0, stdout="")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    out = get_staged_diff()
+    # Shift_JIS 等の非 UTF-8 バイトで内部エラーにせず、置換文字で読み進める
+    assert isinstance(out, str)
+    assert "\ufffd key" in out
+
+
+def test_parse_noprefix_and_mnemonic_prefix_headers():
+    # diff.noprefix=true では "+++ a.env"、mnemonicPrefix では "+++ i/a.env" になる。
+    # コマンド側で prefix を固定しているが、パーサ単体でも行を落とさないこと。
+    for header in ("+++ a.env", "+++ i/a.env"):
+        diff = f"diff --git a.env a.env\n--- a.env\n{header}\n@@ -0,0 +1 @@\n+KEY=1\n"
+        lines = parse_diff(diff)
+        assert len(lines) == 1
+        assert lines[0].content == "KEY=1"
+    assert parse_diff(diff)[0].file_path == "i/a.env"
+
+
+@pytest.mark.parametrize(
+    ("quoted", "expected"),
+    [
+        ('"b/a\\"b.env"', 'a"b.env'),
+        ('"b/a\\tb.env"', "a\tb.env"),
+        ('"b/a\\\\b.env"', "a\\b.env"),
+        ('"b/\\343\\201\\202.py"', "あ.py"),
+    ],
+)
+def test_parse_c_quoted_file_path(quoted, expected):
+    # git は '"', '\\', 制御文字を含むパスを C 文字列形式でクォートする
+    diff = f"diff --git x x\n--- /dev/null\n+++ {quoted}\n@@ -0,0 +1 @@\n+KEY=1\n"
+    lines = parse_diff(diff)
+    assert len(lines) == 1
+    assert lines[0].file_path == expected
+
+
+@pytest.mark.parametrize("sep", ["\r", "\u2028", "\u2029", "\x85", "\x0c", "\x0b"])
+def test_parse_keeps_content_after_non_newline_separators(sep):
+    # git は "\n" のみを行境界とみなす。str.splitlines() の規則で分割すると
+    # これらの文字以降の内容がスキャンから消える。
+    diff = f"diff --git a/a.env b/a.env\n--- /dev/null\n+++ b/a.env\n@@ -0,0 +1 @@\n+x{sep}KEY=1\n"
+    lines = parse_diff(diff)
+    assert len(lines) == 1
+    assert lines[0].content == f"x{sep}KEY=1"
+
+
+def test_header_like_content_inside_hunk_is_treated_as_added_line():
+    # ファイル内容の "++ /dev/null" や "++ b/docs/README.md" は diff 上では
+    # "+++ ..." になるが、ハンク内ではヘッダではなく追加行として扱う。
+    diff = """\
+diff --git a/app.py b/app.py
+--- a/app.py
++++ b/app.py
+@@ -1 +1,4 @@
++++ /dev/null
++++ b/docs/README.md
++KEY=1
+"""
+    lines = parse_diff(diff)
+    assert [line.content for line in lines] == ["++ /dev/null", "++ b/docs/README.md", "KEY=1"]
+    assert all(line.file_path == "app.py" for line in lines)
+
+
+def test_added_line_without_file_header_fails_closed():
+    from keygate.diff.parser import DiffParseError
+
+    diff = "diff --git a/x b/x\n--- a/x\n+++ /dev/null\n@@ -1 +1 @@\n+KEY=1\n"
+    with pytest.raises(DiffParseError):
+        parse_diff(diff)
+
+
+def test_no_newline_marker_does_not_shift_line_numbers():
+    diff = """\
+diff --git a/a.py b/a.py
+--- a/a.py
++++ b/a.py
+@@ -1 +1,2 @@
++first = 1
+\\ No newline at end of file
++second = 2
+"""
+    lines = parse_diff(diff)
+    assert [(line.line_number, line.content) for line in lines] == [(1, "first = 1"), (2, "second = 2")]
+
+
+def test_multiple_hunks_track_line_numbers():
+    diff = """\
+diff --git a/a.py b/a.py
+--- a/a.py
++++ b/a.py
+@@ -1 +1,2 @@
++a = 1
+@@ -10 +11,2 @@
+ ctx = 0
++b = 2
+"""
+    lines = parse_diff(diff)
+    assert [(line.line_number, line.content) for line in lines] == [(1, "a = 1"), (12, "b = 2")]
 
 
 def test_get_repo_root_uses_git_toplevel(monkeypatch, tmp_path):
