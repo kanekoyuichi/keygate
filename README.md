@@ -357,6 +357,7 @@ The defaults work well out of the box, but you can customize behavior by creatin
 [scan]
 entropy_threshold = 4.2    # threshold for random-looking strings (lower = stricter)
 block_score = 70           # commits are blocked at this score or above
+warn_score = 40            # findings at this score or above are reported as warnings
 
 [allowlist]
 paths = ["vendor/*"]
@@ -367,7 +368,7 @@ keywords = ["fixture"]
 path = ".keygate.baseline.json"
 ```
 
-If no config file is present, defaults are used.
+If no config file is present, defaults are used. Invalid values (wrong types, `block_score` / `warn_score` below 1, `warn_score` greater than `block_score`, or a non-positive `entropy_threshold`) stop `keygate` with an explicit `keygate.toml:` error instead of being silently accepted. The file must be UTF-8.
 
 ---
 

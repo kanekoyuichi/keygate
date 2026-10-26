@@ -41,11 +41,11 @@ def format(report: ScanReport) -> str:
     parts: list[str] = []
     parts.append(f"[KEYGATE] status={report.status} findings={report.summary.findings}")
 
-    for result in report.warned:
-        parts.append(_format_finding(result, "WARN"))
-
     for result in report.blocked:
         parts.append(_format_finding(result, "BLOCK"))
+
+    for result in report.warned:
+        parts.append(_format_finding(result, "WARN"))
 
     if report.status == "block":
         parts.append("")

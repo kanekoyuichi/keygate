@@ -289,6 +289,7 @@ git commit -m "Add keygate baseline"
 [scan]
 entropy_threshold = 4.2    # 随机字符串检测阈值（越低越严格）
 block_score = 70           # 达到此分数及以上时阻止提交
+warn_score = 40            # 达到此分数及以上时显示警告
 
 [allowlist]
 paths = ["vendor/*"]
@@ -299,7 +300,7 @@ keywords = ["fixture"]
 path = ".keygate.baseline.json"
 ```
 
-未提供配置文件时使用默认值。
+未提供配置文件时使用默认值。无效的值（类型错误、`block_score` / `warn_score` 小于 1、`warn_score` 大于 `block_score`、`entropy_threshold` 不大于 0 等）不会被静默接受，`keygate` 会以 `keygate.toml:` 开头的错误信息停止。文件需使用 UTF-8 编码。
 
 ---
 
