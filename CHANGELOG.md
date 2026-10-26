@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.2] - 2026-10-27
+
+### Fixes
+
+All items below close detection gaps where `keygate scan` reported `pass` (or blocked unrelated commits) without scanning the staged secret. No detection rule or threshold changed.
+
+- Git configs `diff.noprefix`, `diff.mnemonicPrefix` and `diff.dstPrefix` no longer disable scanning. The diff is now requested with fixed `a/` / `b/` prefixes, and the parser also accepts headers without a prefix. Previously such a config made every added line invisible to keygate and the commit passed.
+- Content after a carriage return, form feed, vertical tab, U+0085, U+2028 or U+2029 inside a line is now scanned. The parser splits on `\n` only, matching git, instead of Python's universal newline rules which silently dropped the rest of the line (including CR-only legacy files and invisible line separators).
+- File names that git quotes (containing `"`, `\`, tabs or control characters) are now decoded, so their added lines are scanned and attributed to the right file instead of being skipped.
+- Lines inside a file that look like diff headers (`++ /dev/null`, `++ b/docs/README.md`) are now treated as content. Previously they could reset the current file (skipping everything after them) or spoof the file path to borrow allowlist and documentation-path leniency.
+- If added lines appear before a recognizable file header, `keygate scan` now fails closed with an internal error (exit code 1) instead of reporting `pass` with zero scanned lines.
+- Staging a non-UTF-8 file (e.g. Shift_JIS) no longer aborts every commit with a `UnicodeDecodeError` internal error. Undecodable bytes are replaced and scanning continues.
+- The `url-credentials` and `pii-email` patterns no longer take quadratic time on long alphanumeric lines. A single 100,000-character line (base64 blob, embedded font, hex dump) previously hung the hook for minutes and now scans in well under a second. Detection results are unchanged.
+
+All changes remain fully offline; no full-repository scan, LLM-based judgement, or external API verification was added.
+
 ## [0.6.1] - 2026-10-26
 
 ### Fixes
