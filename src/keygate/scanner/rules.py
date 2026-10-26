@@ -18,8 +18,11 @@ class Rule:
     remediation: list[str] = field(default_factory=list)
 
 
+# The leading negative lookbehinds below stop the engine from retrying a match
+# at every position inside a long alphanumeric run (base64 blobs, hex dumps),
+# which otherwise makes a single long line take quadratic time.
 _URL_CREDENTIALS_PATTERN = re.compile(
-    r"(?P<scheme>[A-Za-z][A-Za-z0-9+.-]*)://"
+    r"(?<![A-Za-z0-9+.-])(?P<scheme>[A-Za-z][A-Za-z0-9+.-]*)://"
     r"(?P<user>[^:@/\s]*):"
     r"(?P<pwd>[^@\s]+)@"
 )
@@ -394,7 +397,9 @@ RULES: list[Rule] = [
     # escalates to BLOCK. See scoring.aggregate for the cap logic.
     Rule(
         rule_id="pii-email",
-        pattern=re.compile(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"),
+        pattern=re.compile(
+            r"(?<![a-zA-Z0-9._%+-])[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
+        ),
         score=50,
         policy="pii",
         description="Email address detected",
