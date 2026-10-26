@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.1] - 2026-10-26
+
+### Fixes
+
+- Validate `keygate.toml` on load. Wrong types, `block_score` / `warn_score` below 1, `warn_score` greater than `block_score`, a non-positive or non-finite `entropy_threshold`, non-list allowlist entries, an empty `baseline.path`, or a section that is not a table now fail with an explicit `keygate.toml:` error (exit code 1) instead of being accepted silently and making verdicts meaningless. From the hook, an invalid config blocks the commit, matching the existing behavior for TOML syntax errors. Valid configs and repositories without `keygate.toml` behave exactly as before.
+- Read `keygate.toml` as UTF-8 regardless of the system locale, so configs with non-ASCII comments load correctly on Windows. Non-UTF-8 files now report a `keygate.toml:` error instead of an internal error.
+
+### Improvements
+
+- Text output lists BLOCK findings before WARN findings, matching the JSON `findings` order.
+- Internal `score_breakdown` now records PII / placeholder caps as negative deltas so its values sum to `total_score`. This field is not part of the JSON output.
+- Remove an unused parameter from the JSON report builder.
+
+### Docs
+
+- Document `warn_score` and the configuration validation rules in the READMEs (en/ja/zh) and user specs.
+
+Detection rules, scoring thresholds, and scan targets are unchanged, so there is no impact on false positives, detection gaps, or speed. All changes remain fully offline; no full-repository scan, LLM-based judgement, or external API verification was added.
+
 ## [0.6.0] - 2026-06-12
 
 ### Features
