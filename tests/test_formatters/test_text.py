@@ -73,3 +73,23 @@ def test_finding_includes_file_and_score():
     assert ".env:3" in output
     assert "Score: 90" in output
     assert "Rule: openai-api-key" in output
+
+
+def test_block_findings_are_listed_before_warn():
+    report = _block_report()
+    warned = ScanResult(
+        diff_line=DiffLine(file_path="app.py", line_number=1, content="y"),
+        total_score=45,
+        verdict=Verdict.WARN,
+        rule_matches=[],
+        score_breakdown={},
+        reason="high entropy string detected",
+    )
+    report = ScanReport(
+        status="block",
+        summary=ScanSummary(findings=2, blocked=1, warned=1, scanned_lines=3),
+        blocked=report.blocked,
+        warned=[warned],
+    )
+    output = text_formatter.format(report)
+    assert output.index("[BLOCK]") < output.index("[WARN]")

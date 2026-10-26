@@ -123,8 +123,9 @@ def aggregate(
         and top_match.policy == "pii"
         and (total - top_match.score) < block_score
     ):
-        breakdown["cap:pii"] = warn_score
-        total = min(total, warn_score)
+        capped = min(total, warn_score)
+        breakdown["cap:pii"] = capped - total
+        total = capped
         verdict = Verdict.WARN
 
     if (
@@ -137,8 +138,9 @@ def aggregate(
             or _has_comment_sample_context(diff_line.content)
         )
     ):
-        breakdown["cap:placeholder_context"] = warn_score
-        total = min(total, warn_score)
+        capped = min(total, warn_score)
+        breakdown["cap:placeholder_context"] = capped - total
+        total = capped
         verdict = Verdict.WARN
 
     return ScanResult(

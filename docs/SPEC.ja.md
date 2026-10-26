@@ -79,6 +79,7 @@ JSON ペイロードには、固定の schema version、全体 status、summary 
 [scan]
 entropy_threshold = 4.2
 block_score = 70
+warn_score = 40
 
 [allowlist]
 paths = ["vendor/*"]
@@ -88,6 +89,8 @@ keywords = ["fixture"]
 [baseline]
 path = ".keygate.baseline.json"
 ```
+
+値は読み込み時に検証します。`block_score` と `warn_score` は 1 以上の整数で `warn_score <= block_score`（`warn_score` のデフォルトは 40）、`entropy_threshold` は 0 より大きい有限の数値、allowlist の各項目は文字列のリスト、`baseline.path` は空でない文字列である必要があります。ファイルは UTF-8 として読み込みます。不正な設定は `keygate.toml:` で始まるエラー（終了コード 1）となり、hook から実行された場合はコミットをブロックします。
 
 ## 検知ルール
 

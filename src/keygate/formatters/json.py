@@ -86,8 +86,7 @@ def _finding_dict(result: ScanResult) -> dict[str, Any]:
     return finding
 
 
-def build_report(report: ScanReport, scanned_lines: int | None = None) -> dict[str, Any]:
-    summary_lines = scanned_lines if scanned_lines is not None else report.summary.scanned_lines
+def build_report(report: ScanReport) -> dict[str, Any]:
     return {
         "schema_version": SCHEMA_VERSION,
         "status": report.status,
@@ -95,7 +94,7 @@ def build_report(report: ScanReport, scanned_lines: int | None = None) -> dict[s
             "findings": report.summary.findings,
             "blocked": report.summary.blocked,
             "warned": report.summary.warned,
-            "scanned_lines": summary_lines,
+            "scanned_lines": report.summary.scanned_lines,
         },
         "findings": [
             _finding_dict(r) for r in (*report.blocked, *report.warned)

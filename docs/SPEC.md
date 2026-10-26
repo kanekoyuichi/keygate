@@ -79,6 +79,7 @@ Optional configuration lives in `keygate.toml` at the repository root.
 [scan]
 entropy_threshold = 4.2
 block_score = 70
+warn_score = 40
 
 [allowlist]
 paths = ["vendor/*"]
@@ -88,6 +89,8 @@ keywords = ["fixture"]
 [baseline]
 path = ".keygate.baseline.json"
 ```
+
+Values are validated on load: `block_score` and `warn_score` must be integers >= 1 with `warn_score <= block_score` (default `warn_score` is 40), `entropy_threshold` must be a finite number > 0, allowlist entries must be lists of strings, and `baseline.path` must be a non-empty string. The file is read as UTF-8. Invalid configuration fails with a `keygate.toml:` error (exit code 1), which blocks the commit when run from the hook.
 
 ## Detection rules
 

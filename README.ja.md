@@ -232,6 +232,7 @@ pipx upgrade keygate
 [scan]
 entropy_threshold = 4.2    # ランダム文字列の検知感度（下げると厳しくなる）
 block_score = 70           # この点数以上でコミットをブロック
+warn_score = 40            # この点数以上を警告として表示
 
 [allowlist]
 paths = ["vendor/*"]
@@ -242,7 +243,7 @@ keywords = ["fixture"]
 path = ".keygate.baseline.json"
 ```
 
-設定ファイルがなければデフォルトで動作します。
+設定ファイルがなければデフォルトで動作します。不正な値（型の誤り、`block_score` / `warn_score` が 1 未満、`warn_score` が `block_score` より大きい、`entropy_threshold` が 0 以下など）は黙って受け入れず、`keygate.toml:` で始まるエラーで停止します。ファイルは UTF-8 で保存してください。
 
 ---
 

@@ -71,7 +71,8 @@ def test_placeholder_path_caps_strong_rule_to_warn():
     result = aggregate(line, [make_rule_match(90)], 0, signals)
     assert result.verdict == Verdict.WARN
     assert result.total_score == 40
-    assert result.score_breakdown["cap:placeholder_context"] == 40
+    assert result.score_breakdown["cap:placeholder_context"] < 0
+    assert sum(result.score_breakdown.values()) == result.total_score
 
 
 def test_placeholder_comment_caps_openai_rule_to_warn():
@@ -90,7 +91,8 @@ def test_placeholder_comment_caps_openai_rule_to_warn():
     result = aggregate(line, [match], 20, signals)
     assert result.verdict == Verdict.WARN
     assert result.total_score == 40
-    assert result.score_breakdown["cap:placeholder_context"] == 40
+    assert result.score_breakdown["cap:placeholder_context"] < 0
+    assert sum(result.score_breakdown.values()) == result.total_score
 
 
 def test_dummy_word_alone_does_not_cap_real_secret():
@@ -162,7 +164,8 @@ def test_angle_bracket_placeholder_in_matched_value_caps():
     signals = ctx(keyword_score=25, keyword_tier="high", assignment_score=15)
     result = aggregate(line, [match], 0, signals)
     assert result.verdict == Verdict.WARN
-    assert result.score_breakdown["cap:placeholder_context"] == 40
+    assert result.score_breakdown["cap:placeholder_context"] < 0
+    assert sum(result.score_breakdown.values()) == result.total_score
 
 
 def test_empty_assignment_suffix_does_not_cap_real_secret():
@@ -308,10 +311,12 @@ def test_pii_capped_when_context_alone_does_not_block():
     assert "cap:pii" in result.score_breakdown
 
 
-def test_pii_cap_breakdown_value_is_warn_score():
+def test_pii_cap_breakdown_is_negative_delta_matching_total():
+    # PII 50 + context 35 = 85 → cap to 40, breakdown records -45 so the sum matches
     signals = ctx(path_score=20, assignment_score=15)
     result = aggregate(make_line(), [make_pii_match()], 0, signals)
-    assert result.score_breakdown["cap:pii"] == 40
+    assert result.score_breakdown["cap:pii"] == -45
+    assert sum(result.score_breakdown.values()) == result.total_score == 40
 
 
 def test_pii_not_capped_when_non_pii_signals_alone_would_block():
