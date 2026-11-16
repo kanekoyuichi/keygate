@@ -338,3 +338,17 @@ def test_long_alphanumeric_line_scans_quickly():
     start = time.perf_counter()
     assert scan_line(line) == []
     assert time.perf_counter() - start < 1.0
+
+
+@pytest.mark.parametrize("line", [
+    "sk-" * 66_000,
+    "AKIA" * 50_000,
+    "-".join(["sk"] * 66_000),
+])
+def test_repeated_prefix_line_scans_quickly(line):
+    # 境界付きの先読みが開始位置ごとに run 全体を再走査すると二次関数的に遅くなる。
+    import time
+
+    start = time.perf_counter()
+    scan_line(line)
+    assert time.perf_counter() - start < 1.0

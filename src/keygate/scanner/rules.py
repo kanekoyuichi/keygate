@@ -64,8 +64,11 @@ RULES: list[Rule] = [
         rule_id="openai-api-key",
         # The lookahead requires a 20+ alphanumeric run so that slugs and CSS
         # class names such as "sk-folding-cube-..." are not mistaken for keys.
+        # "_" and "-" are in the lookbehind so that a match can only start at
+        # the head of a run; otherwise "sk-sk-sk-..." rescans the run from
+        # every "sk-" and takes quadratic time.
         pattern=re.compile(
-            r"(?<![A-Za-z0-9])sk-(?!ant-)(?=[A-Za-z0-9_-]*[A-Za-z0-9]{20})[A-Za-z0-9_-]{32,}"
+            r"(?<![A-Za-z0-9_-])sk-(?!ant-)(?=[A-Za-z0-9_-]*[A-Za-z0-9]{20})[A-Za-z0-9_-]{32,}"
         ),
         score=85,
         description="OpenAI API Key detected",
