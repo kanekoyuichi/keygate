@@ -325,3 +325,43 @@ def test_pii_not_capped_when_non_pii_signals_alone_would_block():
     result = aggregate(make_line(), [make_pii_match()], 20, signals)
     assert result.verdict == Verdict.BLOCK
     assert "cap:pii" not in result.score_breakdown
+
+
+# ---------- end-to-end: assignment / hex detection across languages ----------
+
+def _pipeline(content, file_path="app.py"):
+    from keygate.scanner import context, entropy, rules
+
+    return aggregate(
+        make_line(content, file_path),
+        rules.scan_line(content),
+        entropy.scan_line(content),
+        context.score_line(content, file_path),
+    )
+
+
+_VALUE = "Zx9KpQ2mVt7LrW4nBc8YhJ3sDf6GaE1u"
+
+
+def test_js_php_java_assignments_score_like_python():
+    expected = _pipeline(f'api_key = "{_VALUE}"').total_score
+    assert expected >= 70
+    for content, path in [
+        (f'const apiKey = "{_VALUE}";', "app.js"),
+        (f'$apiKey = "{_VALUE}";', "app.php"),
+        (f'private static final String API_KEY = "{_VALUE}";', "App.java"),
+        (f'"api_key": "{_VALUE}",', "app.json"),
+    ]:
+        result = _pipeline(content, path)
+        assert result.verdict == Verdict.BLOCK, content
+        assert result.total_score == expected, content
+
+
+def test_hex_secret_assignment_blocks():
+    result = _pipeline('SECRET_KEY = "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3"')  # keygate: ignore reason="test fixture"
+    assert result.verdict == Verdict.BLOCK
+
+
+def test_hex_commit_sha_assignment_is_ignored():
+    result = _pipeline('commit_sha = "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3"')
+    assert result.verdict == Verdict.IGNORE

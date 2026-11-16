@@ -122,6 +122,21 @@ def test_unremarkable_path(path):
     "export API_KEY=abc",
     "API_KEY=abc",
     "DB_URL: postgres://...",
+    # JS / TS
+    'const apiKey = "x"',
+    'export const API_KEY = "x"',
+    'let token: string = "x"',
+    # PHP
+    '$apiKey = "x";',
+    # Java / C# / Kotlin
+    'private static final String API_KEY = "x";',
+    'public Map<String, String> secrets = load();',
+    'val apiKey = "x"',
+    # Go
+    'apiKey := "x"',
+    # JSON / dict literal
+    '"api_key": "x",',
+    "  'password': 'x',",
 ])
 def test_assignment_detected(content):
     s = score_line(content, "app.py")
@@ -133,6 +148,9 @@ def test_assignment_detected(content):
     'if x == 1:',
     'logger.info("user %s", uid)',
     "# api_key = 'commented out'",
+    'if apiKey == "x":',
+    'x == y',
+    "Default value: none",
 ])
 def test_assignment_not_detected(content):
     s = score_line(content, "app.py")
@@ -177,3 +195,13 @@ def test_error_message_string_no_keyword():
         "err.py",
     )
     assert s.keyword_tier == ""
+
+
+def test_long_line_assignment_check_is_fast():
+    import time
+
+    line = "const " * 40_000 + "x"
+    start = time.perf_counter()
+    score_line(line, "app.js")
+    score_line("a" * 200_000, "app.js")
+    assert time.perf_counter() - start < 1.0
