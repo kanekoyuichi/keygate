@@ -7,7 +7,7 @@ from __future__ import annotations
 from keygate import cli
 from keygate.policy.baseline import BaselineStore
 
-_AWS_KEY = "AKIAIOSFODNN7EXAMPLE1234"  # keygate: ignore reason="test fixture"
+_AWS_KEY = "AKIAIOSFODNN7EXAMPLE"  # keygate: ignore reason="test fixture"
 _AWS_DIFF = (
     "diff --git a/.env b/.env\n"
     "new file mode 100644\n"
@@ -115,3 +115,58 @@ def test_run_scan_custom_block_score_from_config(tmp_path, monkeypatch):
     report = cli._run_scan(tmp_path)
     assert report.status == "warn"
     assert report.summary.blocked == 0
+
+
+# ---------- P1-9: text / JSON / reason agree on the representative rule ----------
+
+_MULTI_RULE_DIFF = (
+    "diff --git a/app.env b/app.env\n"
+    "--- /dev/null\n"
+    "+++ b/app.env\n"
+    "@@ -0,0 +1 @@\n"
+    "+DB=https://u:sk-ant-api03-" + "A" * 95 + "@h/x\n"  # keygate: ignore reason="test fixture"
+)
+
+
+def test_text_and_json_report_the_same_top_rule(tmp_path, monkeypatch):
+    import json
+
+    from keygate.formatters import json as json_formatter
+    from keygate.formatters import text as text_formatter
+
+    monkeypatch.setattr(cli, "get_staged_diff", lambda: _MULTI_RULE_DIFF)
+    report = cli._run_scan(tmp_path)
+    result = report.blocked[0]
+    assert {m.rule_id for m in result.rule_matches} >= {"url-credentials", "anthropic-api-key"}
+    assert result.top_match is not None
+    assert result.top_match.rule_id == "anthropic-api-key"
+    assert result.reason.startswith("Anthropic API Key detected")
+    assert "Rule: anthropic-api-key" in text_formatter.format(report)
+    finding = json.loads(json_formatter.format(report))["findings"][0]
+    assert finding["rule_id"] == "anthropic-api-key"
+
+
+# ---------- P1-10: binary files that git did not diff ----------
+
+def _binary_diff(path: str) -> str:
+    return (
+        f"diff --git a/{path} b/{path}\n"
+        "new file mode 100644\n"
+        "index 0000000..1234567\n"
+        f"Binary files /dev/null and b/{path} differ\n"
+    )
+
+
+def test_binary_non_media_file_emits_notice(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(cli, "get_staged_diff", lambda: _binary_diff("secrets.env") + _CLEAN_DIFF)
+    report = cli._run_scan(tmp_path)
+    assert report.status == "pass"
+    err = capsys.readouterr().err
+    assert "[KEYGATE] notice: not scanned (binary in git diff): secrets.env" in err
+
+
+def test_binary_media_file_is_silent(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(cli, "get_staged_diff", lambda: _binary_diff("assets/logo.PNG"))
+    report = cli._run_scan(tmp_path)
+    assert report.status == "pass"
+    assert capsys.readouterr().err == ""

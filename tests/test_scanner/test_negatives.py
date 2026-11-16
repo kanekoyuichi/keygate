@@ -59,7 +59,7 @@ def test_readme_openai_example_does_not_block():
 
 def test_fixture_aws_example_does_not_block():
     verdict, score = _scan(
-        'AWS_KEY = "AKIAIOSFODNN7EXAMPLE1234"  # dummy sample',
+        'AWS_KEY = "AKIAIOSFODNN7EXAMPLE"  # dummy sample',  # keygate: ignore reason="test fixture"
         file_path="tests/fixtures/sample.env",
     )
     assert verdict != Verdict.BLOCK

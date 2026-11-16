@@ -9,6 +9,9 @@ import click
 from keygate.models import DiffLine
 
 _HUNK_HEADER = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@")
+_BINARY_FILES = re.compile(
+    r'^Binary files .* and (?P<dst>"(?:[^"\\]|\\.)*"|/dev/null|\S.*) differ$'
+)
 _C_ESCAPE = re.compile(r"\\([0-7]{1,3}|.)")
 _C_SIMPLE_ESCAPES = {"n": "\n", "t": "\t", "r": "\r", "a": "\a", "b": "\b", "f": "\f", "v": "\v"}
 
@@ -110,6 +113,25 @@ def _parse_target_path(header: str) -> str | None:
     # Prefix is forced on the git command line; tolerate its absence anyway
     # rather than dropping every added line of the file.
     return target
+
+
+def find_binary_files(diff_output: str) -> list[str]:
+    """Return staged paths git reported as "Binary files ... differ".
+
+    Their contents are not part of the diff and therefore are not scanned.
+    """
+    paths: list[str] = []
+    for raw in diff_output.split("\n"):
+        # Hunk lines start with "+", "-", " " or "\\", so this only hits headers.
+        if not raw.startswith("Binary files "):
+            continue
+        m = _BINARY_FILES.match(raw)
+        if m is None:
+            continue
+        path = _parse_target_path(m.group("dst"))
+        if path is not None:
+            paths.append(path)
+    return paths
 
 
 def parse_diff(diff_output: str) -> list[DiffLine]:

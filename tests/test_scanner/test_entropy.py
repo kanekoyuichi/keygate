@@ -1,3 +1,5 @@
+import pytest
+
 from keygate.scanner.entropy import calculate_shannon_entropy, scan_line
 
 
@@ -26,3 +28,30 @@ def test_scan_line_ignores_low_entropy():
 def test_scan_line_returns_20_even_with_multiple_tokens():
     high = "aB3xKp9mQzRvLwYnTjHcFsUeGdOiN2Xb"
     assert scan_line(f"{high} {high}") == 20
+
+
+_HEX40 = "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3"
+
+
+def test_scan_line_detects_hex_secret():
+    # hex は最大 4.0 bit/char なので、緩和なしでは閾値 4.2 に届かない
+    assert calculate_shannon_entropy(_HEX40) < 4.2
+    assert scan_line(f'SECRET_KEY = "{_HEX40}"') == 20
+    assert scan_line(f"API_TOKEN={_HEX40.upper()}") == 20
+
+
+@pytest.mark.parametrize("content", [
+    f'commit_sha = "{_HEX40}"',
+    f"digest: sha256:{_HEX40}",
+    f'"integrity": "{_HEX40}"',
+    f"checksum = {_HEX40}",
+    f"ref: {_HEX40}",
+    f'request_id = "{_HEX40[:32]}"',
+])
+def test_scan_line_keeps_strict_threshold_for_hash_context(content):
+    assert scan_line(content) == 0
+
+
+def test_scan_line_ignores_short_or_mixed_case_hex():
+    assert scan_line("key = a94a8fe5ccb19ba61c4c0873d391e98") == 0  # 31 chars
+    assert scan_line("key = a94a8fe5CCB19BA61c4c0873d391e987") == 0

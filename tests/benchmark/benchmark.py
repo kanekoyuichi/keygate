@@ -34,8 +34,8 @@ class Sample:
 CORPUS: list[Sample] = [
     # --- True Positives: rule-based secrets ---
     Sample("AKIAIOSFODNN7EXAMPLE", "secret", description="AWS AKIA access key"),
-    Sample("ASIAIOSFODNN7ABCDEF01", "secret", description="AWS ASIA session key"),
-    Sample("AROAIOSFODNN7ABCDEF01", "secret", description="AWS AROA role key"),
+    Sample("ASIAIOSFODNN7ABCDEF0", "secret", description="AWS ASIA session key"),
+    Sample("AROAIOSFODNN7ABCDEF0", "secret", description="AWS AROA role key"),
     Sample("sk-abcdefghijklmnopqrstuvwxyz123456", "secret", description="OpenAI API key"),
     Sample("ghp_" + "A" * 36, "secret", description="GitHub PAT (ghp_)"),
     Sample("github_pat_" + "A" * 82, "secret", description="GitHub fine-grained PAT"),
@@ -70,7 +70,19 @@ CORPUS: list[Sample] = [
     Sample("rk_live_" + "C" * 32, "secret", description="Stripe restricted live key long payload"),
     Sample("SG." + "C" * 22 + "." + "D" * 43, "secret", description="SendGrid API key second sample"),
     Sample("-----BEGIN PRIVATE KEY-----", "secret", description="PKCS8 private key PEM header"),
+    Sample("gho_" + "A" * 36, "secret", description="GitHub OAuth token (gho_)"),
+    Sample("ghs_" + "B" * 36, "secret", description="GitHub server-to-server token (ghs_)"),
+    Sample(
+        'headers = {"Authorization": "Bearer ' + "x8fa2dKq9Lm3Wn5Pqv7Zb4Cj6Hs0Ue1Xi" + '"}',
+        "secret",
+        description="Bearer token in a JSON / dict header",
+    ),
+    Sample('"DD_API_KEY": "' + "0123456789abcdef" * 2 + '"', "secret", file_path="config.json", description="Datadog key in JSON"),
     # --- True Positives: context-based (no rule match) ---
+    Sample('const apiKey = "Zx9KpQ2mVt7LrW4nBc8YhJ3sDf6GaE1u";', "secret", file_path="src/app.js", description="JS const assignment"),
+    Sample('private static final String API_KEY = "Zx9KpQ2mVt7LrW4nBc8YhJ3sDf6GaE1u";', "secret", file_path="src/App.java", description="Java constant assignment"),
+    Sample('$apiKey = "Zx9KpQ2mVt7LrW4nBc8YhJ3sDf6GaE1u";', "secret", file_path="app.php", description="PHP variable assignment"),
+    Sample("SECRET_KEY=a94a8fe5ccb19ba61c4c0873d391e987982fbbd3", "secret", file_path=".env", description="Hex-only secret in .env"),
     Sample(
         'api_key = "x8fa2dKq9Lm3Wn5Pqv7Zb4Cj6Hs0Ue1Xi"',
         "secret",
@@ -214,6 +226,15 @@ CORPUS: list[Sample] = [
     Sample("connection_string_template = 'postgres://<user>:<password>@<host>/<db>'", "benign", description="Documentation URL template with placeholders"),
     Sample("postgres://user:<password>@localhost/db", "benign", description="Masked placeholder URL credentials"),
     Sample("mysql://app:changeme@db.local/prod", "benign", description="Changeme URL credentials"),
+    # --- True Negatives: token-boundary and hex look-alikes ---
+    Sample("risk-assessment-and-mitigation-plan-2024", "benign", description="Slug containing -sk-"),
+    Sample('className="desk-layout-container-wrapper-primary-dark"', "benign", file_path="src/App.tsx", description="CSS class containing -sk-"),
+    Sample("task-7c1b8e2f-4a9d-4e3b-9f1a-2b6c8d0e4f7a", "benign", description="Task ID containing -sk-"),
+    Sample('<div class="sk-folding-cube-container-wrapper-large">', "benign", file_path="index.html", description="SpinKit class name"),
+    Sample("region = ASIAPACIFICNORTHEAST1", "benign", description="Region-like word starting with ASIA"),
+    Sample('commit_sha = "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3"', "benign", description="Git commit SHA assignment"),
+    Sample("checksum: 2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae", "benign", file_path="chart.yaml", description="SHA256 checksum in YAML"),
+    Sample("ref: a94a8fe5ccb19ba61c4c0873d391e987982fbbd3", "benign", file_path=".github/workflows/ci.yml", description="Pinned git ref in YAML"),
 ]
 
 
@@ -286,7 +307,7 @@ RECALL_THRESHOLD = 0.95
 
 def test_benchmark_precision_and_recall() -> None:
     result = run()
-    assert len(CORPUS) == 100
+    assert len(CORPUS) >= 100
     assert result.precision >= PRECISION_THRESHOLD, (
         f"Precision {result.precision:.2%} below threshold {PRECISION_THRESHOLD:.0%}. "
         f"False positives: {[s.description for s in result.false_positives]}"

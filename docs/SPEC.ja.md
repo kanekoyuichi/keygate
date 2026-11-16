@@ -34,6 +34,8 @@
 
 つまり `keygate` は、リポジトリ内にすでに存在する全内容ではなく、これからコミットされる差分に集中します。
 
+Git が `Binary files ... differ` と報告するファイル（`-diff` 属性や NUL 文字を含むものなど）は diff に追加行が出ないため、スキャンされません。拡張子が一般的なバイナリ形式（画像、フォント、アーカイブ、Office 文書、実行ファイル、メディア）でない場合、`keygate scan` は stderr に `[KEYGATE] notice: not scanned (binary in git diff): <path>` を出力します。終了コードと JSON 出力は変わりません。
+
 ## コマンド
 
 ```bash
@@ -104,7 +106,7 @@ path = ".keygate.baseline.json"
 - OpenAI API key
 - Anthropic API key
 - Google API key
-- GitHub token
+- GitHub token（`ghp_`、`gho_`、`ghu_`、`ghs_`、`ghr_`、`github_pat_`）
 - GitLab personal access token
 - Slack token
 - PEM 形式の private key
@@ -156,10 +158,12 @@ path = ".keygate.baseline.json"
 
 既知ルールに一致しない値に対しては、Shannon entropy を使ってランダムらしい文字列も見ます。
 
+hex は 1 文字あたり最大 4.0 bit なので、32 文字以上の hex のみのトークンは `entropy_threshold - 0.9`（デフォルト 3.3）と比較します。ただし `sha256`、`digest`、`checksum`、`commit`、`ref`、`id` などハッシュや識別子を示す語を含む行では、この緩和を使いません。
+
 高エントロピーだけでは不十分なことが多いため、次のような文脈と組み合わせて使います。
 
 - `api_key` や `password` のような変数名
-- `NAME=...` のような代入構文
+- `NAME=...`、`const name = ...`、`String NAME = ...`、`$name = ...`、`"name": ...`、`name := ...` のような代入構文
 - `.env`、`.npmrc`、`.pypirc`、`kubeconfig`、`terraform.tfvars`、Docker config のような機微なファイルパス
 
 ### コンテキストシグナル
@@ -186,7 +190,7 @@ path = ".keygate.baseline.json"
 
 `keygate` には、想定された検知を抑制するための主な手段が 3 つあります。
 
-- reason 必須の inline ignore コメント
+- reason 必須の inline ignore コメント（コメント記号は `#`、`//`、`/*`、`--`、`<!--`）
 - `keygate.toml` による allowlist path / pattern 設定
 - 既存検知を登録する baseline ファイル
 

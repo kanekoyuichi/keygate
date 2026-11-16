@@ -20,16 +20,17 @@ def _format_finding(result: ScanResult, level: str) -> str:
     lines.append(f"\n[{level}] {headline}")
     lines.append("")
     lines.append(f"File: {result.diff_line.file_path}:{result.diff_line.line_number}")
-    if result.rule_matches:
-        lines.append(f"Rule: {result.rule_matches[0].rule_id}")
+    top = result.top_match
+    if top is not None:
+        lines.append(f"Rule: {top.rule_id}")
     lines.append(f"Score: {result.total_score}")
     lines.append("")
     lines.append("Reason:")
     lines.append(result.reason)
-    if result.rule_matches and result.rule_matches[0].remediation:
+    if top is not None and top.remediation:
         lines.append("")
         lines.append("Remediation:")
-        for item in result.rule_matches[0].remediation:
+        for item in top.remediation:
             lines.append(f"  - {item}")
     lines.append("")
     lines.append("To ignore:")

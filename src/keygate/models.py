@@ -40,6 +40,13 @@ class ScanResult:
     score_breakdown: dict[str, int]
     reason: str
 
+    @property
+    def top_match(self) -> RuleMatch | None:
+        """The highest-scoring rule match; every output reads this one."""
+        if not self.rule_matches:
+            return None
+        return max(self.rule_matches, key=lambda m: m.score)
+
 
 @dataclass
 class PolicyResult:

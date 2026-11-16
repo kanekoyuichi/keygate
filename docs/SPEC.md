@@ -34,6 +34,8 @@ The default scan target is:
 
 That means `keygate` focuses on what is about to be committed, not everything already present in the repository.
 
+Files that git reports as `Binary files ... differ` (for example because of a `-diff` attribute or a NUL byte) have no added lines in the diff and are not scanned. Unless the extension is a common binary format (images, fonts, archives, office documents, executables, media), `keygate scan` prints `[KEYGATE] notice: not scanned (binary in git diff): <path>` to stderr. The exit code and JSON output are unaffected.
+
 ## Commands
 
 ```bash
@@ -104,7 +106,7 @@ Values are validated on load: `block_score` and `warn_score` must be integers >=
 - OpenAI API keys
 - Anthropic API keys
 - Google API keys
-- GitHub tokens
+- GitHub tokens (`ghp_`, `gho_`, `ghu_`, `ghs_`, `ghr_`, `github_pat_`)
 - GitLab personal access tokens
 - Slack tokens
 - private keys in PEM format
@@ -157,10 +159,12 @@ Examples of `public_exposable` behavior:
 
 For values that do not match a known rule, `keygate` also looks for random-looking strings using Shannon entropy.
 
+Hex-only tokens of 32 or more characters are compared against `entropy_threshold - 0.9` (3.3 by default), because hex cannot exceed 4.0 bits per character. This relaxation is skipped on lines that mention hashes or identifiers (`sha256`, `digest`, `checksum`, `commit`, `ref`, `id`, and similar), so digests and commit SHAs are not reported.
+
 High entropy alone is not enough in many cases. It becomes more useful when paired with context such as:
 
 - variable names like `api_key` or `password`
-- assignment syntax such as `NAME=...`
+- assignment syntax such as `NAME=...`, `const name = ...`, `String NAME = ...`, `$name = ...`, `"name": ...`, or `name := ...`
 - sensitive file paths such as `.env`, `.npmrc`, `.pypirc`, `kubeconfig`, `terraform.tfvars`, and Docker config files
 
 ### Context signals
@@ -187,7 +191,7 @@ Some findings are intentionally downgraded in placeholder or documentation-style
 
 `keygate` supports three main ways to suppress expected findings:
 
-- inline ignore comments with a required reason
+- inline ignore comments with a required reason (`#`, `//`, `/*`, `--`, or `<!--` comment markers)
 - allowlist path and pattern configuration in `keygate.toml`
 - baseline files for existing findings
 

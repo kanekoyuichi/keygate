@@ -43,8 +43,24 @@ _SECRET_TOOL_PATH = re.compile(
 _SENSITIVE_PATH = re.compile(r"(?:settings|credentials?|secrets?|config)", re.IGNORECASE)
 _CONFIG_EXT = re.compile(r"\.(?:ya?ml|toml|ini|properties)$", re.IGNORECASE)
 
-_ASSIGN_COLON_EQ = re.compile(r"""^\s*[A-Za-z_][A-Za-z0-9_.-]*\s*[:=]\s*["']?""")
-_ASSIGN_EXPORT = re.compile(r"""^\s*export\s+[A-Za-z_][A-Za-z0-9_]*\s*=""")
+_DECL_MODIFIERS = (
+    r"(?:(?:export|const|let|var|final|static|private|public|protected|readonly|val)\s+)*"
+)
+# `key = v`, `key: v`, `export KEY=v`, `const key = v`, `$key = v`,
+# `"key": v` (JSON), `key: string = v` (TS), `key := v` (Go).
+# "==" is excluded so comparisons are not mistaken for assignments.
+_ASSIGN_DECL = re.compile(
+    r"^\s*" + _DECL_MODIFIERS
+    + r"""["']?\$?[A-Za-z_][A-Za-z0-9_.-]*["']?"""
+    + r"\s*(?::\s*[A-Za-z_][\w<>\[\]|]*\s*)?"
+    + r"(?::=|[:=](?!=))"
+)
+# Typed declarations such as `String API_KEY = v` (Java / C#). Restricted to
+# "=" so that prose like "Default value: x" does not count as an assignment.
+_ASSIGN_TYPED = re.compile(
+    r"^\s*" + _DECL_MODIFIERS
+    + r"[A-Za-z_](?:[\w<>\[\].]|,\s*)*\s+\$?[A-Za-z_][A-Za-z0-9_]*\s*=(?!=)"
+)
 
 
 @dataclass(frozen=True)
@@ -78,7 +94,7 @@ def _path(file_path: str) -> int:
 
 
 def _assignment(content: str) -> int:
-    if _ASSIGN_EXPORT.match(content) or _ASSIGN_COLON_EQ.match(content):
+    if _ASSIGN_DECL.match(content) or _ASSIGN_TYPED.match(content):
         return 15
     return 0
 
