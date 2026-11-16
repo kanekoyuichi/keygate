@@ -221,6 +221,12 @@ exit code 与原行为一致：`0` 表示 pass/warn，`1` 表示 block，`2` 表
 api_key = "dummy-key-for-testing"  # keygate: ignore reason="test data"
 ```
 
+注释符号支持 `#`、`//`、`/* */`、`--` 和 `<!-- -->`，因此也可用于 JavaScript、Go、Java、SQL、HTML 和 Markdown：
+
+```js
+const apiKey = "dummy-key-for-testing"; // keygate: ignore reason="test data"
+```
+
 ### 方式二：路径或模式白名单
 
 在项目根目录创建 `keygate.toml`，指定要排除的路径或模式。
@@ -326,21 +332,21 @@ A. 如果是通过 `pipx` 安装的，运行 `pipx upgrade keygate`。如果是�
 
 ## 检测准确率
 
-基于 100 个标注样本（50 个已知密钥、50 个无害字符串）的测量结果。
+基于 116 个标注样本（58 个已知密钥、58 个无害字符串）的测量结果。
 
 | 指标 | 值 |
 |------|-----|
 | 召回率（Recall: 未漏掉真实密钥的比例） | 100.0% |
-| 精确率（Precision: 被检测项中真正危险的比例） | 80.6% |
-| F1 分数（召回率与精确率的平衡指标） | 89.3% |
-| True Positive（正确检测到的密钥） | 50 |
+| 精确率（Precision: 被检测项中真正危险的比例） | 82.9% |
+| F1 分数（召回率与精确率的平衡指标） | 90.6% |
+| True Positive（正确检测到的密钥） | 58 |
 | False Negative（漏掉的密钥） | 0 |
 | False Positive（并非真实密钥但被检测到的内容） | 12 |
-| True Negative（正确放行的无害字符串） | 38 |
+| True Negative（正确放行的无害字符串） | 46 |
 
 **召回率 100.0%** 意味着语料库中所有已知密钥均被检测到（BLOCK 或 WARN）。也就是说，在该基准测试中没有漏检密钥。
 
-**精确率 80.6%** 反映了 12 个 False Positive。其中包括已遮蔽的 URL 凭据、占位符、Stripe publishable key，以及 `API_KEY=` 这样的空值。它们并不一定是真实密钥，但外观接近密钥，因此 `keygate` 会在提交前提示你检查。
+**精确率 82.9%** 反映了 12 个 False Positive。其中包括已遮蔽的 URL 凭据、占位符、Stripe publishable key，以及 `API_KEY=` 这样的空值。它们并不一定是真实密钥，但外观接近密钥，因此 `keygate` 会在提交前提示你检查。
 
 语料库和阈值作为回归测试进行管理。如需重新测量：
 
@@ -356,6 +362,7 @@ python -m tests.benchmark.benchmark
 
 - **不保证完整检测**：未知密钥格式、混淆值或自定义格式可能无法被检测到（漏报）。
 - **可能存在误报**：非密钥字符串可能被标记。请使用白名单 / baseline / 内联忽略处理。
+- **Git 视为二进制的文件不会被扫描**：通过 `.gitattributes` 设置了 `-diff` 或包含 NUL 字符的文件，其内容不会出现在 diff 中，此时会显示 `[KEYGATE] notice: not scanned (binary in git diff): <path>`（图片、字体、压缩包等常见二进制格式不提示）。
 - **不是密钥管理的替代方案**：本工具是提交时的额外防护层。密钥应通过环境变量、密钥管理器或 KMS 等方式管理，不应存储在仓库中。
 - **钩子可被绕过**：`git commit --no-verify` 会跳过所有钩子。如需组织级管控，请结合服务端检查（pre-receive hook、CI 扫描等）使用。
 - **因漏报导致的密钥泄露，责任由使用者承担**：因使用本工具造成的任何损失，作者及贡献者概不负责（详见 [LICENSE](LICENSE)）。

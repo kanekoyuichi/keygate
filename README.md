@@ -288,6 +288,12 @@ Suppresses detection for that specific line. A reason is required.
 api_key = "dummy-key-for-testing"  # keygate: ignore reason="test data"
 ```
 
+The comment can use `#`, `//`, `/* */`, `--`, or `<!-- -->`, so it works in JavaScript, Go, Java, SQL, HTML, and Markdown too:
+
+```js
+const apiKey = "dummy-key-for-testing"; // keygate: ignore reason="test data"
+```
+
 ### Option 2: Allowlist paths or patterns
 
 Create a `keygate.toml` file in your project root and specify paths or patterns to exclude.
@@ -386,6 +392,10 @@ A. Use `git commit --no-verify` to skip all hooks for a single commit. To remove
 
 A. Commit `keygate.toml` and `.keygate.baseline.json` to Git. Each team member needs to run `keygate activate` individually.
 
+**Q. What does `notice: not scanned (binary in git diff)` mean?**
+
+A. Git treated that staged file as binary (for example because of a `-diff` attribute in `.gitattributes` or a NUL byte in the file), so its contents were not part of the diff and were not scanned. Common binary formats such as images, fonts, and archives are skipped silently. If the file should be scanned, remove the `-diff` attribute or the stray NUL byte.
+
 **Q. How do I update KeyGate?**
 
 A. If you installed it with `pipx`, run `pipx upgrade keygate`. If you installed it with `pip`, run `python -m pip install -U keygate`.
@@ -394,21 +404,21 @@ A. If you installed it with `pipx`, run `pipx upgrade keygate`. If you installed
 
 ## Detection accuracy
 
-Measured against a labeled corpus of 100 samples (50 known secrets, 50 benign strings).
+Measured against a labeled corpus of 116 samples (58 known secrets, 58 benign strings).
 
 | Metric    | Value |
 |-----------|-------|
 | Recall    | 100.0% |
-| Precision | 80.6%  |
-| F1        | 89.3%  |
-| True Positive | 50 |
+| Precision | 82.9%  |
+| F1        | 90.6%  |
+| True Positive | 58 |
 | False Negative | 0 |
 | False Positive | 12 |
-| True Negative | 38 |
+| True Negative | 46 |
 
 **Recall 100.0%** means every known secret in the corpus was detected (BLOCK or WARN). In other words, the benchmark had zero missed secrets.
 
-**Precision 80.6%** reflects 12 false positives. These include masked URL credentials, placeholders, Stripe publishable keys, and empty values such as `API_KEY=`. They are not always real secrets, but they look close enough to secret-like values that `keygate` reports them before commit so you can review them.
+**Precision 82.9%** reflects 12 false positives. These include masked URL credentials, placeholders, Stripe publishable keys, and empty values such as `API_KEY=`. They are not always real secrets, but they look close enough to secret-like values that `keygate` reports them before commit so you can review them.
 
 The corpus and thresholds are enforced as a regression test. To re-run:
 

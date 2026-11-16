@@ -112,7 +112,7 @@ To ignore:
 - OpenAI API キー（`sk-...`、`sk-proj-...` など）
 - Anthropic API キー（`sk-ant-...`）
 - Google API キー（`AIza...`）
-- GitHub トークン（`ghp_...`）
+- GitHub トークン（`ghp_` / `gho_` / `ghu_` / `ghs_` / `ghr_` / `github_pat_`）
 - GitLab personal access token（`glpat-...`）
 - Slack トークン（`xoxb-...`）
 - 秘密鍵（PEM 形式）
@@ -147,6 +147,12 @@ api_key = "dummy-key-for-testing"  # keygate: ignore reason="テストデータ"
 ```
 
 コメントを追加するだけです。`reason="..."` は省略できません（なぜ無視したかを記録するためです）。
+
+コメント記号は `#`・`//`・`/* */`・`--`・`<!-- -->` に対応しているので、JavaScript・Go・Java・SQL・HTML・Markdown でも使えます。
+
+```js
+const apiKey = "dummy-key-for-testing"; // keygate: ignore reason="テストデータ"
+```
 
 ### 方法2：特定のファイルやパターンを除外する
 
@@ -262,13 +268,13 @@ JSON は固定スキーマ（`schema_version: "1"`）で、`status` / `summary` 
 
 ## 検知精度
 
-100件のラベル付きコーパス（既知シークレット50件 + 無害な文字列50件）での計測結果です。
+116件のラベル付きコーパス（既知シークレット58件 + 無害な文字列58件）での計測結果です。
 
 | 指標 | 値 |
 |------|-----|
 | 再現率（本物のシークレットを見逃さなかった割合） | 100.0% |
-| 適合率（検知したもののうち本当に危険だった割合） | 80.6% |
-| F1 スコア | 89.3% |
+| 適合率（検知したもののうち本当に危険だった割合） | 82.9% |
+| F1 スコア | 90.6% |
 | 見逃したシークレット（False Negative） | 0件 |
 | 誤検知（False Positive） | 12件 |
 
@@ -280,6 +286,7 @@ JSON は固定スキーマ（`schema_version: "1"`）で、`status` / `summary` 
 
 - **完全な検知は保証しません**：未知のフォーマットや難読化された値は検知できない場合があります
 - **誤検知はゼロではありません**：allowlist / baseline / inline ignore で対処してください
+- **Git がバイナリとみなしたファイルはスキャンしません**：`.gitattributes` の `-diff` 指定や NUL 文字を含むファイルは diff に中身が出ないため、`[KEYGATE] notice: not scanned (binary in git diff): <path>` を表示します（画像・フォント・アーカイブ等の一般的なバイナリは表示しません）
 - **フックはバイパスできます**：`git commit --no-verify` で回避可能です
 - **シークレット管理の代替ではありません**：本来は環境変数やシークレットマネージャーで管理するのが鉄則です
 

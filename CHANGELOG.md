@@ -2,6 +2,37 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.3] - 2026-11-16
+
+### Fixes
+
+False positives (fewer unwarranted BLOCKs):
+
+- `openai-api-key` no longer matches `-sk-` inside slugs, CSS class names or IDs (`risk-assessment-and-mitigation-plan-2024`, `desk-layout-...`, `task-...`, SpinKit `sk-folding-cube-...`). The key now needs a boundary (not a letter, digit, `_` or `-`) before `sk-` and a run of 20+ alphanumeric characters.
+- `aws-access-key` requires token boundaries on both sides, so words such as `ASIAPACIFICNORTHEAST1` and `AKIA` inside a longer base64 run no longer BLOCK. Real access key IDs are exactly 20 characters and are still detected.
+
+Missed secrets (now detected):
+
+- `github-token` covers OAuth (`gho_`), user-to-server (`ghu_`), server-to-server (`ghs_`) and refresh (`ghr_`) tokens in addition to `ghp_` and `github_pat_`. `aws-access-key` also accepts the `AGPA` / `AIDA` / `ANPA` prefixes.
+- `Authorization: Bearer` / `Basic` and the Datadog, Vercel and Twilio rules match quoted keys and `=` as used in JSON and dict literals (`{"Authorization": "Bearer ..."}`, `"DD_API_KEY": "..."`). Previously these were ignored.
+- Assignments in JS/TS (`const` / `let` / `export`, type annotations), Java/C#/Kotlin (modifiers, typed declarations), PHP (`$name =`), Go (`:=`) and JSON keys now count as assignments, so the same secret scores the same as in Python (e.g. `const apiKey = "..."` moves from WARN 60 to BLOCK). `==` comparisons no longer count as assignments.
+- Hex-only secrets (32+ characters) can now reach the entropy signal. Hex cannot exceed 4.0 bits per character, so they were always below the 4.2 threshold. They now use `entropy_threshold - 0.9` (3.3 by default) unless the line mentions a hash or identifier (`sha256`, `digest`, `checksum`, `commit`, `ref`, `id`, ...). Example: `SECRET_KEY=<40 hex>` in `.env` now BLOCKs, while `commit_sha = "<40 hex>"` stays ignored.
+
+Consistency:
+
+- Text output, the `reason` message and JSON output now report the same representative rule (the highest-scoring match). Previously text showed the first rule in definition order (e.g. `url-credentials`) while JSON showed the highest score (e.g. `anthropic-api-key`).
+
+### Improvements
+
+- Inline ignore accepts `//`, `/* */`, `--` and `<!-- -->` comment markers in addition to `#`, so JS/TS/Go/Java/SQL/HTML/Markdown files can suppress a line, e.g. `// keygate: ignore reason="demo"`. A reason is still required.
+- Staged files that git reports as binary (e.g. via a `-diff` attribute or a NUL byte) are listed on stderr as `[KEYGATE] notice: not scanned (binary in git diff): <path>`, instead of being skipped without notice. Common binary formats (images, fonts, archives, etc.) are not listed. The exit code and JSON output are unchanged.
+
+### Docs
+
+- Benchmark corpus grew to 116 samples with token-boundary negatives and new positives: precision 80.6% -> 82.9%, recall stays at 100%.
+
+All changes remain fully offline and scan only added lines of `git diff --cached`; no full-repository scan, LLM-based judgement, or external API verification was added. Scan speed is unchanged (the new patterns stay linear on 200,000-character lines).
+
 ## [0.6.2] - 2026-10-27
 
 ### Fixes
