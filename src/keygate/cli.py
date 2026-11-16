@@ -1,17 +1,37 @@
 from __future__ import annotations
 
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 import click
 
 from keygate.config import load_config
-from keygate.diff.parser import get_repo_root, get_staged_diff, parse_diff
+from keygate.diff.parser import find_binary_files, get_repo_root, get_staged_diff, parse_diff
 from keygate.formatters import json as json_formatter
 from keygate.formatters import text as text_formatter
 from keygate.hook.installer import install, uninstall
 from keygate.models import ScanReport, ScanResult, ScanSummary, Status, Verdict
 from keygate.policy import allowlist, baseline, inline
 from keygate.scanner import context, entropy, rules, scoring
+
+
+# Formats that are binary by nature. Anything else that git reports as binary
+# (a "-diff" attribute, a stray NUL byte, keystores) is surfaced as a notice.
+_KNOWN_BINARY_EXT = frozenset({
+    "png", "jpg", "jpeg", "gif", "bmp", "ico", "webp", "tif", "tiff", "psd", "avif", "heic",
+    "woff", "woff2", "ttf", "otf", "eot",
+    "zip", "gz", "tgz", "bz2", "xz", "7z", "rar", "tar", "jar", "war", "whl", "egg",
+    "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "odt", "ods", "odp",
+    "exe", "dll", "so", "dylib", "a", "o", "lib", "bin", "class", "pyc", "wasm",
+    "mp3", "mp4", "mov", "avi", "wav", "flac", "ogg", "webm", "mkv", "m4a",
+    "sqlite", "sqlite3",
+})
+
+
+def _notify_unscanned_binaries(diff_output: str) -> None:
+    for path in find_binary_files(diff_output):
+        if PurePosixPath(path).suffix[1:].lower() in _KNOWN_BINARY_EXT:
+            continue
+        click.echo(f"[KEYGATE] notice: not scanned (binary in git diff): {path}", err=True)
 
 
 def _build_report(blocked: list[ScanResult], warned: list[ScanResult], scanned_lines: int) -> ScanReport:
@@ -34,6 +54,7 @@ def _run_scan(repo_root: Path) -> ScanReport:
     cfg = load_config(repo_root)
     diff_output = get_staged_diff()
     diff_lines = parse_diff(diff_output)
+    _notify_unscanned_binaries(diff_output)
 
     if not diff_lines:
         return _build_report([], [], 0)

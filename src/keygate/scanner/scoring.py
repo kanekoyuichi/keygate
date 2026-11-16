@@ -48,13 +48,13 @@ def _has_comment_sample_context(content: str) -> bool:
 
 
 def _build_reason(
-    rule_matches: list[RuleMatch],
+    top_match: RuleMatch | None,
     entropy_score: int,
     context_total: int,
 ) -> str:
     parts: list[str] = []
-    if rule_matches:
-        parts.append(rule_matches[0].description)
+    if top_match is not None:
+        parts.append(top_match.description)
     if entropy_score > 0:
         parts.append("high entropy string detected")
     if context_total > 0:
@@ -149,5 +149,5 @@ def aggregate(
         verdict=verdict,
         rule_matches=rule_matches,
         score_breakdown=breakdown,
-        reason=_build_reason(rule_matches, entropy_score, context_total),
+        reason=_build_reason(top_match, entropy_score, context_total),
     )

@@ -6,8 +6,13 @@ import click
 
 from keygate.models import DiffLine, PolicyResult
 
-_IGNORE_WITH_REASON = re.compile(r"#\s*keygate:\s*ignore\s+reason=\"(?P<reason>[^\"]+)\"")
-_IGNORE_WITHOUT_REASON = re.compile(r"#\s*keygate:\s*ignore\b")
+# Comment markers: # (Python/shell/YAML), // and /* (C-family/JS/Go),
+# -- (SQL/Lua), <!-- (HTML/Markdown).
+_COMMENT = r"(?:#|//|--|/\*|<!--)"
+_IGNORE_WITH_REASON = re.compile(
+    _COMMENT + r"\s*keygate:\s*ignore\s+reason=\"(?P<reason>[^\"]+)\""
+)
+_IGNORE_WITHOUT_REASON = re.compile(_COMMENT + r"\s*keygate:\s*ignore\b")
 
 
 def check(diff_line: DiffLine) -> PolicyResult:

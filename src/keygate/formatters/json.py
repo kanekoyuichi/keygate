@@ -3,7 +3,7 @@ from __future__ import annotations
 import json as _json
 from typing import Any
 
-from keygate.models import RuleMatch, ScanReport, ScanResult
+from keygate.models import ScanReport, ScanResult
 
 SCHEMA_VERSION = "1"
 
@@ -57,14 +57,8 @@ def _mask_snippet(matched_text: str) -> str | None:
     return f"{head}***{tail}"
 
 
-def _top_match(matches: list[RuleMatch]) -> RuleMatch | None:
-    if not matches:
-        return None
-    return max(matches, key=lambda m: m.score)
-
-
 def _finding_dict(result: ScanResult) -> dict[str, Any]:
-    top = _top_match(result.rule_matches)
+    top = result.top_match
     finding: dict[str, Any] = {
         "rule_id": top.rule_id if top else None,
         "policy": top.policy if top else None,

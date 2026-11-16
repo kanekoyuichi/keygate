@@ -302,3 +302,25 @@ def test_get_repo_root_uses_git_toplevel(monkeypatch, tmp_path):
     assert get_repo_root(tmp_path / "src") == tmp_path
     assert calls[0][0] == ["git", "rev-parse", "--show-toplevel"]
     assert calls[0][1]["cwd"] == tmp_path / "src"
+
+
+# ---------- find_binary_files ----------
+
+def test_find_binary_files_reports_added_and_modified():
+    from keygate.diff.parser import find_binary_files
+
+    diff = (
+        "diff --git a/a.bin b/a.bin\n"
+        "Binary files a/a.bin and b/a.bin differ\n"
+        "diff --git a/new file.env b/new file.env\n"
+        "Binary files /dev/null and b/new file.env differ\n"
+        "diff --git a/gone.dat b/gone.dat\n"
+        "Binary files a/gone.dat and /dev/null differ\n"
+        'diff --git "a/q\\"x.env" "b/q\\"x.env"\n'
+        'Binary files "a/q\\"x.env" and "b/q\\"x.env" differ\n'
+        "diff --git a/t.py b/t.py\n"
+        "+++ b/t.py\n"
+        "@@ -0,0 +1 @@\n"
+        "+Binary files are fine to mention\n"
+    )
+    assert find_binary_files(diff) == ["a.bin", "new file.env", 'q"x.env']
