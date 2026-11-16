@@ -45,6 +45,8 @@ def test_scan_line_detects_hex_secret():
     f"digest: sha256:{_HEX40}",
     f'"integrity": "{_HEX40}"',
     f"checksum = {_HEX40}",
+    f"ref: {_HEX40}",
+    f'request_id = "{_HEX40[:32]}"',
 ])
 def test_scan_line_keeps_strict_threshold_for_hash_context(content):
     assert scan_line(content) == 0

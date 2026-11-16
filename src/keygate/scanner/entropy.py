@@ -13,7 +13,8 @@ _HEX_THRESHOLD_OFFSET = 0.9
 # Digests, commit SHAs and IDs are hex too; keep the strict threshold for them.
 _HASH_CONTEXT = re.compile(
     r"(?:^|[^A-Za-z])"
-    r"(?:sha\d*|md5|digest|checksum|hash|integrity|commit|rev|revision|etag|fingerprint|uuid|guid)"
+    r"(?:sha\d*|md5|digest|checksum|hash|integrity|commit|ref|rev|revision|etag|fingerprint"
+    r"|uuid|guid|id)"
     r"(?:[^A-Za-z]|$)",
     re.IGNORECASE,
 )
