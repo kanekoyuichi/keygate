@@ -64,7 +64,7 @@ def test_dummy_penalty():
 
 def test_placeholder_path_caps_strong_rule_to_warn():
     line = make_line(
-        content='AWS_KEY = "AKIAIOSFODNN7EXAMPLE1234"  # example only',  # keygate: ignore reason="test fixture"
+        content='AWS_KEY = "AKIAIOSFODNN7EXAMPLE"  # example only',  # keygate: ignore reason="test fixture"
         file_path="README.md",
     )
     signals = ctx(assignment_score=15)

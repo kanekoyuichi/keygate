@@ -7,7 +7,7 @@ from __future__ import annotations
 from keygate import cli
 from keygate.policy.baseline import BaselineStore
 
-_AWS_KEY = "AKIAIOSFODNN7EXAMPLE1234"  # keygate: ignore reason="test fixture"
+_AWS_KEY = "AKIAIOSFODNN7EXAMPLE"  # keygate: ignore reason="test fixture"
 _AWS_DIFF = (
     "diff --git a/.env b/.env\n"
     "new file mode 100644\n"

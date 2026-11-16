@@ -34,8 +34,8 @@ class Sample:
 CORPUS: list[Sample] = [
     # --- True Positives: rule-based secrets ---
     Sample("AKIAIOSFODNN7EXAMPLE", "secret", description="AWS AKIA access key"),
-    Sample("ASIAIOSFODNN7ABCDEF01", "secret", description="AWS ASIA session key"),
-    Sample("AROAIOSFODNN7ABCDEF01", "secret", description="AWS AROA role key"),
+    Sample("ASIAIOSFODNN7ABCDEF0", "secret", description="AWS ASIA session key"),
+    Sample("AROAIOSFODNN7ABCDEF0", "secret", description="AWS AROA role key"),
     Sample("sk-abcdefghijklmnopqrstuvwxyz123456", "secret", description="OpenAI API key"),
     Sample("ghp_" + "A" * 36, "secret", description="GitHub PAT (ghp_)"),
     Sample("github_pat_" + "A" * 82, "secret", description="GitHub fine-grained PAT"),

@@ -42,14 +42,16 @@ _MASK_PATTERN = re.compile(
 )
 
 _BASIC_AUTH_PATTERN = re.compile(
-    r"\bAuthorization\s*:\s*Basic\s+(?P<value>[A-Za-z0-9+/]{12,}={0,2})(?![A-Za-z0-9+/=])",
+    r"\bAuthorization[\"']?\s*[:=]\s*[\"']?Basic\s+(?P<value>[A-Za-z0-9+/]{12,}={0,2})(?![A-Za-z0-9+/=])",
     re.IGNORECASE,
 )
 
 RULES: list[Rule] = [
     Rule(
         rule_id="aws-access-key",
-        pattern=re.compile(r"(?:AKIA|ASIA|AROA)[0-9A-Z]{16}"),
+        pattern=re.compile(
+            r"(?<![A-Z0-9])(?:AKIA|ASIA|AROA|AGPA|AIDA|ANPA)[0-9A-Z]{16}(?![A-Z0-9])"
+        ),
         score=90,
         description="AWS Access Key detected",
         remediation=[
@@ -60,7 +62,11 @@ RULES: list[Rule] = [
     ),
     Rule(
         rule_id="openai-api-key",
-        pattern=re.compile(r"sk-(?!ant-)[A-Za-z0-9_-]{32,}"),
+        # The lookahead requires a 20+ alphanumeric run so that slugs and CSS
+        # class names such as "sk-folding-cube-..." are not mistaken for keys.
+        pattern=re.compile(
+            r"(?<![A-Za-z0-9])sk-(?!ant-)(?=[A-Za-z0-9_-]*[A-Za-z0-9]{20})[A-Za-z0-9_-]{32,}"
+        ),
         score=85,
         description="OpenAI API Key detected",
         remediation=[
@@ -71,9 +77,9 @@ RULES: list[Rule] = [
     ),
     Rule(
         rule_id="github-token",
-        pattern=re.compile(r"ghp_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{82}"),
+        pattern=re.compile(r"gh[pousr]_[A-Za-z0-9]{36,255}|github_pat_[A-Za-z0-9_]{82}"),
         score=85,
-        description="GitHub Personal Access Token detected",
+        description="GitHub token detected",
         remediation=[
             "Remove the token from the code",
             "Revoke the token on GitHub",
@@ -277,7 +283,7 @@ RULES: list[Rule] = [
     Rule(
         rule_id="vercel-token",
         pattern=re.compile(
-            r"\bvercel[_-]?token\s*[:=]\s*[\"']?[A-Za-z0-9]{24,}\b",
+            r"\bvercel[_-]?token[\"']?\s*[:=]\s*[\"']?[A-Za-z0-9]{24,}\b",
             re.IGNORECASE,
         ),
         score=80,
@@ -304,7 +310,7 @@ RULES: list[Rule] = [
     Rule(
         rule_id="datadog-api-key",
         pattern=re.compile(
-            r"\b(?:datadog|dd)[_-]?(?:api|app)[_-]?key\s*[:=]\s*[\"']?[A-Fa-f0-9]{32,40}\b",
+            r"\b(?:datadog|dd)[_-]?(?:api|app)[_-]?key[\"']?\s*[:=]\s*[\"']?[A-Fa-f0-9]{32,40}\b",
             re.IGNORECASE,
         ),
         score=85,
@@ -355,7 +361,7 @@ RULES: list[Rule] = [
     Rule(
         rule_id="twilio-auth-token",
         pattern=re.compile(
-            r"\btwilio[_-]?auth[_-]?token\s*[:=]\s*[\"']?[A-Fa-f0-9]{32}\b",
+            r"\btwilio[_-]?auth[_-]?token[\"']?\s*[:=]\s*[\"']?[A-Fa-f0-9]{32}\b",
             re.IGNORECASE,
         ),
         score=85,
@@ -369,7 +375,7 @@ RULES: list[Rule] = [
     Rule(
         rule_id="authorization-bearer",
         pattern=re.compile(
-            r"\bAuthorization\s*:\s*Bearer\s+[A-Za-z0-9._~+/=-]{20,}\b",
+            r"\bAuthorization[\"']?\s*[:=]\s*[\"']?Bearer\s+[A-Za-z0-9._~+/=-]{20,}\b",
             re.IGNORECASE,
         ),
         score=70,

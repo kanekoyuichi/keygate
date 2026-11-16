@@ -3,7 +3,7 @@ from keygate.scanner.rules import RULES, scan_line
 
 
 @pytest.mark.parametrize("content,rule_id", [
-    ("AWS_KEY=AKIAIOSFODNN7EXAMPLE1234", "aws-access-key"),
+    ("AWS_KEY=AKIAIOSFODNN7EXAMPLE", "aws-access-key"),  # keygate: ignore reason="test fixture"
     ("key = sk-abcdefghijklmnopqrstuvwxyz123456", "openai-api-key"),
     ("key = sk-proj-" + "A" * 40, "openai-api-key"),  # keygate: ignore reason="test fixture"
     ("key = sk-svcacct-" + "A" * 40, "openai-api-key"),  # keygate: ignore reason="test fixture"
@@ -37,6 +37,18 @@ from keygate.scanner.rules import RULES, scan_line
     ("TWILIO_AUTH_TOKEN=" + "a" * 32, "twilio-auth-token"),  # keygate: ignore reason="test fixture"
     ("Authorization: Bearer " + "A" * 24, "authorization-bearer"),  # keygate: ignore reason="test fixture"
     ("Authorization: Basic dXNlcjpwYXNzd29yZA==", "authorization-basic"),  # keygate: ignore reason="test fixture"
+    # GitHub OAuth / user-to-server / server-to-server / refresh tokens
+    ("token = gho_" + "A" * 36, "github-token"),
+    ("token = ghu_" + "A" * 36, "github-token"),
+    ("token = ghs_" + "A" * 36, "github-token"),
+    ("token = ghr_" + "A" * 36, "github-token"),
+    ("AWS_KEY=AGPAIOSFODNN7EXAMPLE", "aws-access-key"),  # keygate: ignore reason="test fixture"
+    # Quoted key forms common in JSON / dict literals
+    ('headers = {"Authorization": "Bearer ' + "A" * 24 + '"}', "authorization-bearer"),  # keygate: ignore reason="test fixture"
+    ("headers = {'Authorization': 'Basic dXNlcjpwYXNzd29yZA=='}", "authorization-basic"),  # keygate: ignore reason="test fixture"
+    ('"DD_API_KEY": "' + "a" * 32 + '"', "datadog-api-key"),  # keygate: ignore reason="test fixture"
+    ('"VERCEL_TOKEN": "' + "A" * 24 + '"', "vercel-token"),  # keygate: ignore reason="test fixture"
+    ('"TWILIO_AUTH_TOKEN": "' + "a" * 32 + '"', "twilio-auth-token"),  # keygate: ignore reason="test fixture"
 ])
 def test_rule_matches(content, rule_id):
     matches = scan_line(content)
@@ -48,12 +60,12 @@ def test_no_match_on_clean_line():
 
 
 def test_rule_match_has_score():
-    matches = scan_line("AKIAIOSFODNN7EXAMPLE1234")
+    matches = scan_line("AKIAIOSFODNN7EXAMPLE")  # keygate: ignore reason="test fixture"
     assert matches[0].score > 0
 
 
 def test_rule_match_has_remediation():
-    matches = scan_line("AKIAIOSFODNN7EXAMPLE1234")
+    matches = scan_line("AKIAIOSFODNN7EXAMPLE")  # keygate: ignore reason="test fixture"
     assert len(matches[0].remediation) > 0
 
 
@@ -185,6 +197,28 @@ def test_anthropic_key_not_matched_as_openai():
     ]
     assert "anthropic-api-key" in rule_ids
     assert "openai-api-key" not in rule_ids
+
+
+@pytest.mark.parametrize("content", [
+    # "-sk-" inside slugs, CSS class names and task IDs
+    "risk-assessment-and-mitigation-plan-2024",
+    'className="desk-layout-container-wrapper-primary-dark"',
+    "task-7c1b8e2f-4a9d-4e3b-9f1a-2b6c8d0e4f7a",
+    # SpinKit-style class names start with "sk-" but have no long alphanumeric run
+    '<div class="sk-folding-cube-container-wrapper-large">',
+])
+def test_openai_rule_ignores_embedded_sk(content):
+    assert "openai-api-key" not in [m.rule_id for m in scan_line(content)]
+
+
+@pytest.mark.parametrize("content", [
+    # AWS region-like words and AKIA inside a longer base64 run
+    "ASIAPACIFICNORTHEAST1",
+    "data = 'Zm9vYmFyAKIAIOSFODNN7EXAMPLEZm9vYmFy'",  # keygate: ignore reason="test fixture"
+    "AKIAIOSFODNN7EXAMPLE1234",  # keygate: ignore reason="test fixture"
+])
+def test_aws_rule_requires_token_boundary(content):
+    assert "aws-access-key" not in [m.rule_id for m in scan_line(content)]
 
 
 def test_fake_aws_prefix_not_matched():
